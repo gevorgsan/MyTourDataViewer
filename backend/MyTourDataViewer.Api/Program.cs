@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using MyTourDataViewer.Api.Data;
@@ -18,6 +19,15 @@ builder.Host.UseSerilog();
 
 // ── MVC / Controllers ──────────────────────────────────────────────────────────
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(opt =>
+{
+    opt.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "MyTourDataViewer API",
+        Version = "v1"
+    });
+});
 
 // ── Database ───────────────────────────────────────────────────────────────────
 // Switch between SQLite (default) and PostgreSQL via the DBPROVIDER env var.
@@ -86,6 +96,13 @@ builder.Services.AddScoped<IExternalApiClientService, ExternalApiClientService>(
 
 // ──────────────────────────────────────────────────────────────────────────────
 var app = builder.Build();
+
+app.UseSwagger();
+app.UseSwaggerUI(opt =>
+{
+    opt.SwaggerEndpoint("/swagger/v1/swagger.json", "MyTourDataViewer API v1");
+    opt.RoutePrefix = "swagger";
+});
 
 // Apply pending migrations and seed default data on startup
 using (var scope = app.Services.CreateScope())
