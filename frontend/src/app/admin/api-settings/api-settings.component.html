@@ -1,14 +1,121 @@
 <div class="api-settings-container">
-  <h2>External API Settings</h2>
-  <!-- TODO: implement API settings list and connection test -->
-  <p>Manage external API configurations here.</p>
-  <table>
+  <div class="header">
+    <h2>External API Settings</h2>
+    <button class="btn btn-primary" (click)="openCreate()">+ Add API</button>
+  </div>
+
+  <p *ngIf="error" class="error">{{ error }}</p>
+
+  <!-- Settings table -->
+  <table *ngIf="!showForm">
     <thead>
-      <tr><th>Name</th><th>Base URL</th><th>Auth Type</th><th>Active</th><th>Actions</th></tr>
+      <tr>
+        <th>Name</th>
+        <th>Base URL</th>
+        <th>Auth Type</th>
+        <th>Timeout (s)</th>
+        <th>Active</th>
+        <th>Actions</th>
+      </tr>
     </thead>
     <tbody>
-      <!-- rows generated dynamically -->
+      <tr *ngFor="let item of items">
+        <td>{{ item.name }}</td>
+        <td>{{ item.baseUrl }}</td>
+        <td>{{ item.authType }}</td>
+        <td>{{ item.timeoutSeconds }}</td>
+        <td>{{ item.isActive ? 'Yes' : 'No' }}</td>
+        <td class="actions">
+          <button class="btn btn-sm" (click)="openEdit(item)">Edit</button>
+          <button class="btn btn-sm btn-secondary"
+                  (click)="testConnection(item)"
+                  [disabled]="testingId === item.id">
+            {{ testingId === item.id ? 'Testing…' : 'Test' }}
+          </button>
+          <button class="btn btn-sm btn-danger" (click)="delete(item)">Delete</button>
+        </td>
+      </tr>
+      <tr *ngIf="items.length === 0">
+        <td colspan="6" class="empty">No API configurations yet.</td>
+      </tr>
     </tbody>
   </table>
+
+  <!-- Test result banner -->
+  <div *ngIf="testResult" class="test-result" [class.success]="testResult.success" [class.failure]="!testResult.success">
+    <strong>{{ testResult.success ? '✔ Connected' : '✘ Failed' }}</strong>
+    <span *ngIf="testResult.statusCode"> — HTTP {{ testResult.statusCode }}</span>
+    <span *ngIf="testResult.message"> — {{ testResult.message }}</span>
+    <button class="close" (click)="testResult = null">×</button>
+  </div>
+
+  <!-- Add / Edit form -->
+  <form *ngIf="showForm" [formGroup]="form" (ngSubmit)="save()" class="settings-form">
+    <h3>{{ editingId ? 'Edit API Configuration' : 'New API Configuration' }}</h3>
+
+    <div class="form-row">
+      <label>Name *</label>
+      <input formControlName="name" type="text" placeholder="My External API" />
+    </div>
+
+    <div class="form-row">
+      <label>Base URL *</label>
+      <input formControlName="baseUrl" type="url" placeholder="https://api.example.com" />
+    </div>
+
+    <div class="form-row">
+      <label>Endpoint URLs (JSON array)</label>
+      <input formControlName="endpointUrls" type="text" placeholder='["/data", "/stats"]' />
+    </div>
+
+    <div class="form-row">
+      <label>Auth Type *</label>
+      <select formControlName="authType">
+        <option *ngFor="let t of authTypes" [value]="t">{{ t }}</option>
+      </select>
+    </div>
+
+    <ng-container [ngSwitch]="form.get('authType')?.value">
+      <div *ngSwitchCase="'Basic'" class="form-row">
+        <label>Username</label>
+        <input formControlName="username" type="text" />
+      </div>
+      <div *ngSwitchCase="'Basic'" class="form-row">
+        <label>Password</label>
+        <input formControlName="password" type="password" placeholder="Leave blank to keep current" />
+      </div>
+
+      <div *ngSwitchCase="'ApiKey'" class="form-row">
+        <label>API Key</label>
+        <input formControlName="apiKey" type="text" />
+      </div>
+
+      <div *ngSwitchCase="'Bearer'" class="form-row">
+        <label>Bearer Token</label>
+        <input formControlName="bearerToken" type="text" />
+      </div>
+    </ng-container>
+
+    <div class="form-row">
+      <label>Timeout (seconds)</label>
+      <input formControlName="timeoutSeconds" type="number" min="0" max="300" />
+    </div>
+
+    <div *ngIf="editingId" class="form-row">
+      <label>
+        <input formControlName="isActive" type="checkbox" />
+        Active
+      </label>
+    </div>
+
+    <p *ngIf="error" class="error">{{ error }}</p>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">
+        {{ saving ? 'Saving…' : (editingId ? 'Update' : 'Create') }}
+      </button>
+      <button type="button" class="btn" (click)="cancel()">Cancel</button>
+    </div>
+  </form>
 </div>
 

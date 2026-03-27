@@ -45,6 +45,7 @@ export interface ApiSettings {
   authType: string;
   username?: string;
   apiKey?: string;
+  timeoutSeconds: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -59,6 +60,7 @@ export interface CreateApiSettingsRequest {
   password?: string;
   apiKey?: string;
   bearerToken?: string;
+  timeoutSeconds?: number;
 }
 
 export interface UpdateApiSettingsRequest {
@@ -70,6 +72,7 @@ export interface UpdateApiSettingsRequest {
   password?: string;
   apiKey?: string;
   bearerToken?: string;
+  timeoutSeconds?: number;
   isActive?: boolean;
 }
 

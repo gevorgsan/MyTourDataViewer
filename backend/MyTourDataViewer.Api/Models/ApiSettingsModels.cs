@@ -11,6 +11,7 @@ public class ApiSettingsDto
     public string AuthType { get; set; } = "None";
     public string? Username { get; set; }
     public string? ApiKey { get; set; }
+    public int TimeoutSeconds { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -26,6 +27,7 @@ public class CreateApiSettingsRequest
     public string? Password { get; set; }
     public string? ApiKey { get; set; }
     public string? BearerToken { get; set; }
+    [Range(0, 300)] public int TimeoutSeconds { get; set; } = 30;
 }
 
 public class UpdateApiSettingsRequest
@@ -38,6 +40,7 @@ public class UpdateApiSettingsRequest
     public string? Password { get; set; }
     public string? ApiKey { get; set; }
     public string? BearerToken { get; set; }
+    [Range(0, 300)] public int? TimeoutSeconds { get; set; }
     public bool? IsActive { get; set; }
 }
 

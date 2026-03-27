@@ -19,33 +19,27 @@ export class ApiSettingsService {
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<ApiSettings[]> {
-    // TODO: implement
-    throw new Error('Not implemented');
+    return this.http.get<ApiSettings[]>(this.baseUrl);
   }
 
   getById(id: number): Observable<ApiSettings> {
-    // TODO: implement
-    throw new Error('Not implemented');
+    return this.http.get<ApiSettings>(`${this.baseUrl}/${id}`);
   }
 
   create(request: CreateApiSettingsRequest): Observable<ApiSettings> {
-    // TODO: implement
-    throw new Error('Not implemented');
+    return this.http.post<ApiSettings>(this.baseUrl, request);
   }
 
   update(id: number, request: UpdateApiSettingsRequest): Observable<void> {
-    // TODO: implement
-    throw new Error('Not implemented');
+    return this.http.put<void>(`${this.baseUrl}/${id}`, request);
   }
 
   delete(id: number): Observable<void> {
-    // TODO: implement
-    throw new Error('Not implemented');
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
   testConnection(request: TestConnectionRequest): Observable<TestConnectionResponse> {
-    // TODO: implement
-    throw new Error('Not implemented');
+    return this.http.post<TestConnectionResponse>(`${this.baseUrl}/test`, request);
   }
 }
 

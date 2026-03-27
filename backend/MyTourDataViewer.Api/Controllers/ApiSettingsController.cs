@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyTourDataViewer.Api.Models;
+using MyTourDataViewer.Api.Services;
 
 namespace MyTourDataViewer.Api.Controllers;
 
@@ -9,52 +10,63 @@ namespace MyTourDataViewer.Api.Controllers;
 [Authorize(Roles = "Administrator")]
 public class ApiSettingsController : ControllerBase
 {
+    private readonly IApiSettingsService _apiSettingsService;
+    private readonly IExternalApiClientService _externalApiClient;
     private readonly ILogger<ApiSettingsController> _logger;
 
-    public ApiSettingsController(ILogger<ApiSettingsController> logger)
+    public ApiSettingsController(
+        IApiSettingsService apiSettingsService,
+        IExternalApiClientService externalApiClient,
+        ILogger<ApiSettingsController> logger)
     {
+        _apiSettingsService = apiSettingsService;
+        _externalApiClient = externalApiClient;
         _logger = logger;
     }
 
     [HttpGet]
-    public Task<ActionResult<IEnumerable<ApiSettingsDto>>> GetAll()
+    public async Task<ActionResult<IEnumerable<ApiSettingsDto>>> GetAll()
     {
-        // TODO: implement
-        throw new NotImplementedException();
+        var items = await _apiSettingsService.GetAllAsync();
+        return Ok(items);
     }
 
     [HttpGet("{id:int}")]
-    public Task<ActionResult<ApiSettingsDto>> GetById(int id)
+    public async Task<ActionResult<ApiSettingsDto>> GetById(int id)
     {
-        // TODO: implement
-        throw new NotImplementedException();
+        var item = await _apiSettingsService.GetByIdAsync(id);
+        return item == null ? NotFound() : Ok(item);
     }
 
     [HttpPost]
-    public Task<ActionResult<ApiSettingsDto>> Create([FromBody] CreateApiSettingsRequest request)
+    public async Task<ActionResult<ApiSettingsDto>> Create([FromBody] CreateApiSettingsRequest request)
     {
-        // TODO: implement
-        throw new NotImplementedException();
+        var created = await _apiSettingsService.CreateAsync(request);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id:int}")]
-    public Task<IActionResult> Update(int id, [FromBody] UpdateApiSettingsRequest request)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateApiSettingsRequest request)
     {
-        // TODO: implement
-        throw new NotImplementedException();
+        var (success, error) = await _apiSettingsService.UpdateAsync(id, request);
+        if (!success)
+            return error == "Not found." ? NotFound() : BadRequest(new { message = error });
+        return NoContent();
     }
 
     [HttpDelete("{id:int}")]
-    public Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        // TODO: implement
-        throw new NotImplementedException();
+        var (success, error) = await _apiSettingsService.DeleteAsync(id);
+        if (!success)
+            return error == "Not found." ? NotFound() : BadRequest(new { message = error });
+        return NoContent();
     }
 
     [HttpPost("test")]
-    public Task<ActionResult<TestConnectionResponse>> TestConnection([FromBody] TestConnectionRequest request)
+    public async Task<ActionResult<TestConnectionResponse>> TestConnection([FromBody] TestConnectionRequest request)
     {
-        // TODO: implement
-        throw new NotImplementedException();
+        var result = await _externalApiClient.TestConnectionAsync(request.ApiSettingsId, request.EndpointPath);
+        return Ok(result);
     }
 }
