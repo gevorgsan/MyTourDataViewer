@@ -1,0 +1,54 @@
+version: '3.9'
+
+services:
+  # ── Backend ──────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend/MyTourDataViewer.Api
+      dockerfile: Dockerfile
+    container_name: mytour-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+      - DbProvider=sqlite          # change to "postgres" to use PostgreSQL
+      - Jwt__Key=CHANGE_ME_IN_PRODUCTION_32_CHARS_MIN
+      - Jwt__Issuer=MyTourDataViewer
+      - Jwt__Audience=MyTourDataViewerClients
+      - ConnectionStrings__DefaultConnection=Data Source=/data/mytourviewer.db
+      - ConnectionStrings__Postgres=Host=db;Port=5432;Database=mytourviewer;Username=postgres;Password=postgres
+    volumes:
+      - sqlite-data:/data
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  # ── Frontend ─────────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mytour-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ── PostgreSQL (optional, used when DbProvider=postgres) ─────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: mytour-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mytourviewer
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+volumes:
+  sqlite-data:
+  postgres-data:
