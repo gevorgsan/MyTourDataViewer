@@ -6,10 +6,10 @@ A full-stack dashboard application that consumes data from external APIs.
 
 | Layer | Technology |
 |---|---|
-| Backend | ASP.NET Core 8 Web API |
-| Frontend | Angular 17 |
+| Backend | ASP.NET Core 10 Web API |
+| Frontend | Angular 19 |
 | Database | SQLite (default) / PostgreSQL |
-| ORM | Entity Framework Core 8 |
+| ORM | Entity Framework Core 10 |
 | Auth | ASP.NET Core Identity + JWT |
 | Roles | `Administrator`, `Viewer` |
 | Logging | Serilog |
@@ -59,17 +59,17 @@ MyTourDataViewer/
 ## Quick start (local)
 
 ### Prerequisites
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [Node.js 20+](https://nodejs.org/)
-- [Angular CLI 17](https://angular.dev/): `npm install -g @angular/cli@17`
+- [Angular CLI 19](https://angular.dev/): `npm install -g @angular/cli@19`
 
 ### Backend
 
 ```bash
 cd backend/MyTourDataViewer.Api
 
-# Run EF migrations (first time only)
-dotnet ef migrations add InitialCreate --output-dir Data/Migrations
+# Migrations are applied automatically on startup.
+# To apply manually (first time only):
 dotnet ef database update
 
 # Start the API
@@ -104,6 +104,8 @@ Set `DbProvider=postgres` in `docker-compose.yml` or in `appsettings.json` to us
 
 Key settings in `backend/MyTourDataViewer.Api/appsettings.json`:
 
+Also add `Jwt:ExpiryMinutes` to control token lifetime (defaults to `60` minutes).
+
 | Key | Description |
 |---|---|
 | `DbProvider` | `sqlite` (default) or `postgres` |
@@ -112,6 +114,7 @@ Key settings in `backend/MyTourDataViewer.Api/appsettings.json`:
 | `Jwt:Key` | JWT signing key — **change in production** |
 | `Jwt:Issuer` | JWT issuer |
 | `Jwt:Audience` | JWT audience |
+| `Jwt:ExpiryMinutes` | Token lifetime in minutes (default: 60) |
 
 ## API endpoints
 

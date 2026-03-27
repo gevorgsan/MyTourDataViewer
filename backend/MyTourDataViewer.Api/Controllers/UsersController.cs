@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyTourDataViewer.Api.Models;
+using MyTourDataViewer.Api.Services;
 
 namespace MyTourDataViewer.Api.Controllers;
 
@@ -9,45 +10,56 @@ namespace MyTourDataViewer.Api.Controllers;
 [Authorize(Roles = "Administrator")]
 public class UsersController : ControllerBase
 {
+    private readonly IUserService _userService;
     private readonly ILogger<UsersController> _logger;
 
-    public UsersController(ILogger<UsersController> logger)
+    public UsersController(IUserService userService, ILogger<UsersController> logger)
     {
+        _userService = userService;
         _logger = logger;
     }
 
     [HttpGet]
-    public Task<ActionResult<IEnumerable<UserDto>>> GetAll()
+    public async Task<ActionResult<IEnumerable<UserDto>>> GetAll()
     {
-        // TODO: implement
-        throw new NotImplementedException();
+        var users = await _userService.GetAllAsync();
+        return Ok(users);
     }
 
     [HttpGet("{id}")]
-    public Task<ActionResult<UserDto>> GetById(string id)
+    public async Task<ActionResult<UserDto>> GetById(string id)
     {
-        // TODO: implement
-        throw new NotImplementedException();
+        var user = await _userService.GetByIdAsync(id);
+        return user == null ? NotFound() : Ok(user);
     }
 
     [HttpPost]
-    public Task<ActionResult<UserDto>> Create([FromBody] CreateUserRequest request)
+    public async Task<ActionResult<UserDto>> Create([FromBody] CreateUserRequest request)
     {
-        // TODO: implement
-        throw new NotImplementedException();
+        var (success, error, user) = await _userService.CreateAsync(request);
+        if (!success)
+            return BadRequest(new { message = error });
+
+        return CreatedAtAction(nameof(GetById), new { id = user!.Id }, user);
     }
 
     [HttpPut("{id}")]
-    public Task<IActionResult> Update(string id, [FromBody] UpdateUserRequest request)
+    public async Task<IActionResult> Update(string id, [FromBody] UpdateUserRequest request)
     {
-        // TODO: implement
-        throw new NotImplementedException();
+        var (success, error) = await _userService.UpdateAsync(id, request);
+        if (!success)
+            return error == "User not found." ? NotFound() : BadRequest(new { message = error });
+
+        return NoContent();
     }
 
     [HttpDelete("{id}")]
-    public Task<IActionResult> Delete(string id)
+    public async Task<IActionResult> Delete(string id)
     {
-        // TODO: implement
-        throw new NotImplementedException();
+        var (success, error) = await _userService.DeleteAsync(id);
+        if (!success)
+            return error == "User not found." ? NotFound() : BadRequest(new { message = error });
+
+        return NoContent();
     }
 }
