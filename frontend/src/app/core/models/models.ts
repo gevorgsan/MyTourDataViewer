@@ -76,6 +76,13 @@ export interface UpdateApiSettingsRequest {
   isActive?: boolean;
 }
 
+export interface AvailableApi {
+  id: number;
+  name: string;
+  baseUrl: string;
+  endpointUrls: string;
+}
+
 export interface TestConnectionRequest {
   apiSettingsId: number;
   endpointPath?: string;
