@@ -4,12 +4,14 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { DashboardComponent } from './dashboard/dashboard.component';
+import { OverviewComponent } from './overview/overview.component';
 import { SearchRequestComponent } from './search-request/search-request.component';
 
 
 @NgModule({
   declarations: [
     DashboardComponent,
+    OverviewComponent,
     SearchRequestComponent
   ],
   imports: [
