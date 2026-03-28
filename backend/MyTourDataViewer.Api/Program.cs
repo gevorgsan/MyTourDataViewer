@@ -95,6 +95,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IApiSettingsService, ApiSettingsService>();
 builder.Services.AddScoped<IExternalApiAuthorizationService, ExternalApiAuthorizationService>();
 builder.Services.AddScoped<IExternalApiClientService, ExternalApiClientService>();
+builder.Services.AddScoped<ISearchRequestService, SearchRequestService>();
 
 // ──────────────────────────────────────────────────────────────────────────────
 var app = builder.Build();

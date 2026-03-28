@@ -1,0 +1,90 @@
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { DashboardService } from '../../core/services/dashboard.service';
+import { SearchRequestService } from '../../core/services/search-request.service';
+import { AvailableApi, SearchRequestItem } from '../../core/models/models';
+
+type LoadState = 'idle' | 'loading' | 'success' | 'error';
+
+@Component({
+  standalone: false,
+  selector: 'app-search-request',
+  templateUrl: './search-request.component.html',
+  styleUrl: './search-request.component.scss'
+})
+export class SearchRequestComponent implements OnInit {
+  form!: FormGroup;
+
+  apis: AvailableApi[] = [];
+  apisState: LoadState = 'idle';
+
+  searchState: LoadState = 'idle';
+  results: SearchRequestItem[] = [];
+  errorMessage = '';
+
+  constructor(
+    private fb: FormBuilder,
+    private dashboardService: DashboardService,
+    private searchRequestService: SearchRequestService
+  ) {}
+
+  ngOnInit(): void {
+    this.form = this.fb.group({
+      apiSettingsId: [null, Validators.required],
+      createdFrom: ['', Validators.required],
+      createdTo: ['', Validators.required],
+      requestChanels: [null],
+      requestStatus: [null]
+    });
+
+    this.loadApis();
+  }
+
+  loadApis(): void {
+    this.apisState = 'loading';
+    this.dashboardService.getAvailableApis().subscribe({
+      next: apis => {
+        this.apis = apis;
+        this.apisState = 'success';
+      },
+      error: () => {
+        this.apisState = 'error';
+        this.errorMessage = 'Failed to load API configurations.';
+      }
+    });
+  }
+
+  onSubmit(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const { apiSettingsId, createdFrom, createdTo, requestChanels, requestStatus } = this.form.value;
+
+    this.searchState = 'loading';
+    this.results = [];
+    this.errorMessage = '';
+
+    this.searchRequestService.search(apiSettingsId, {
+      createdFrom,
+      createdTo,
+      requestChanels: requestChanels ?? null,
+      requestStatus: requestStatus ?? null
+    }).subscribe({
+      next: items => {
+        this.results = items;
+        this.searchState = 'success';
+      },
+      error: err => {
+        this.searchState = 'error';
+        this.errorMessage = err?.error?.message ?? 'Failed to retrieve search results.';
+      }
+    });
+  }
+
+  isInvalid(field: string): boolean {
+    const ctrl = this.form.get(field);
+    return !!(ctrl && ctrl.invalid && ctrl.touched);
+  }
+}
