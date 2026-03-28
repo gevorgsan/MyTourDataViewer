@@ -87,6 +87,12 @@ public class ExternalApiAuthorizationService : IExternalApiAuthorizationService
         JsonElement credentialsElement;
         try
         {
+            if (apiSettings.CredentialsPayload.Length > 8192)
+            {
+                _logger.LogWarning("Credentials payload exceeds maximum allowed size for API settings {ApiSettingsId}.", apiSettings.Id);
+                return ExternalApiAuthorizationResult.Failed("Credentials payload exceeds maximum allowed size.");
+            }
+
             credentialsElement = JsonSerializer.Deserialize<JsonElement>(apiSettings.CredentialsPayload);
         }
         catch (JsonException ex)

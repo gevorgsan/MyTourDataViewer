@@ -35,6 +35,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(a => a.TokenUrl)
                 .HasMaxLength(2048);
 
+            entity.Property(a => a.CredentialsPayload)
+                .HasMaxLength(8192);
+
             entity.HasMany(a => a.Endpoints)
                 .WithOne(e => e.ApiSettings)
                 .HasForeignKey(e => e.ApiSettingsId)

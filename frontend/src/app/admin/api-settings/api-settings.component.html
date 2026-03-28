@@ -82,6 +82,9 @@
       <textarea formControlName="credentialsPayload"
                 rows="4"
                 placeholder='{"email":"user@example.com","password":"secret"}'></textarea>
+      <span class="error" *ngIf="form.get('credentialsPayload')?.errors?.['invalidJson']">
+        Must be valid JSON.
+      </span>
     </div>
 
     <div class="form-row">

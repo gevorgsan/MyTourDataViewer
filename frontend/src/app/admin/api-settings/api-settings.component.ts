@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { ApiSettings, CreateApiSettingsRequest, TestConnectionResponse } from '../../core/models/models';
 import { ApiSettingsService } from '../../core/services/api-settings.service';
 
@@ -35,10 +35,21 @@ export class ApiSettingsComponent implements OnInit {
       name:               ['', Validators.required],
       tokenUrl:           [''],
       authorizationType:  ['None'],
-      credentialsPayload: [''],
+      credentialsPayload: ['', this.jsonValidator],
       timeoutSeconds:     [30, [Validators.required, Validators.min(0), Validators.max(300)]],
       isActive:           [true]
     });
+  }
+
+  private jsonValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value as string;
+    if (!value || !value.trim()) return null;
+    try {
+      JSON.parse(value);
+      return null;
+    } catch {
+      return { invalidJson: true };
+    }
   }
 
   private load(): void {

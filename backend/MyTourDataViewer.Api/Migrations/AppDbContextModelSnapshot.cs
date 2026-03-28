@@ -258,6 +258,7 @@ namespace MyTourDataViewer.Api.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CredentialsPayload")
+                        .HasMaxLength(8192)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("EndpointUrls")

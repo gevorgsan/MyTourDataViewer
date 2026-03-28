@@ -11,7 +11,7 @@ using MyTourDataViewer.Api.Data;
 namespace MyTourDataViewer.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260328190338_AddAuthorizationFieldsToApiSettings")]
+    [Migration("20260328190513_AddAuthorizationFieldsToApiSettings")]
     partial class AddAuthorizationFieldsToApiSettings
     {
         /// <inheritdoc />
@@ -261,6 +261,7 @@ namespace MyTourDataViewer.Api.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CredentialsPayload")
+                        .HasMaxLength(8192)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("EndpointUrls")

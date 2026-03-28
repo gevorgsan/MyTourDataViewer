@@ -22,6 +22,7 @@ namespace MyTourDataViewer.Api.Migrations
                 name: "CredentialsPayload",
                 table: "ApiSettings",
                 type: "TEXT",
+                maxLength: 8192,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
