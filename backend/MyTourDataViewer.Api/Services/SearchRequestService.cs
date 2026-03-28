@@ -1,8 +1,6 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
-using MyTourDataViewer.Api.Data;
 using MyTourDataViewer.Api.Entities;
 using MyTourDataViewer.Api.Models;
 
@@ -10,57 +8,39 @@ namespace MyTourDataViewer.Api.Services;
 
 /// <summary>
 /// Calls the external SearchRequest endpoint on behalf of the frontend,
-/// obtaining a Bearer token via <see cref="IExternalApiAuthorizationService"/>.
+/// automatically using the first available External API Settings record for authorization.
 /// </summary>
 public class SearchRequestService : ISearchRequestService
 {
     private const string DefaultSearchRequestUrl = "https://api.mytour.am/api/Request/SearchRequest";
 
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IExternalApiAuthorizationService _authService;
-    private readonly AppDbContext _db;
+    private readonly IDefaultApiAuthorizationProvider _authorizationProvider;
     private readonly ILogger<SearchRequestService> _logger;
 
     public SearchRequestService(
         IHttpClientFactory httpClientFactory,
-        IExternalApiAuthorizationService authService,
-        AppDbContext db,
+        IDefaultApiAuthorizationProvider authorizationProvider,
         ILogger<SearchRequestService> logger)
     {
         _httpClientFactory = httpClientFactory;
-        _authService = authService;
-        _db = db;
+        _authorizationProvider = authorizationProvider;
         _logger = logger;
     }
 
     /// <inheritdoc />
     public async Task<IList<SearchRequestItem>> SearchAsync(
-        int apiSettingsId,
         SearchRequestDto request,
         CancellationToken cancellationToken = default)
     {
-        var settings = await _db.ApiSettings
-            .AsNoTracking()
-            .Include(a => a.Endpoints)
-            .FirstOrDefaultAsync(a => a.Id == apiSettingsId, cancellationToken);
-
-        if (settings == null)
-        {
-            _logger.LogWarning("API settings {ApiSettingsId} not found.", apiSettingsId);
-            throw new InvalidOperationException($"API configuration with id {apiSettingsId} was not found.");
-        }
-
-        var authResult = await _authService.GetBearerTokenAsync(settings, cancellationToken);
+        var authResult = await _authorizationProvider.GetDefaultAuthorizationAsync(cancellationToken);
         if (!authResult.Success || string.IsNullOrWhiteSpace(authResult.Token))
         {
-            _logger.LogWarning(
-                "Failed to retrieve bearer token for API settings {ApiSettingsId}: {Error}",
-                apiSettingsId,
-                authResult.ErrorMessage);
             throw new InvalidOperationException(
                 authResult.ErrorMessage ?? "Failed to retrieve bearer token.");
         }
 
+        var settings = authResult.Settings!;
         var searchRequestUrl = ResolveSearchRequestUrl(settings);
 
         using var client = _httpClientFactory.CreateClient();
@@ -77,7 +57,7 @@ public class SearchRequestService : ISearchRequestService
         _logger.LogInformation(
             "Sending SearchRequest to {Url} using API settings {ApiSettingsId}.",
             searchRequestUrl,
-            apiSettingsId);
+            settings.Id);
 
         using var response = await client.SendAsync(httpRequest, cancellationToken);
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);

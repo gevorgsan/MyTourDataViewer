@@ -94,6 +94,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IApiSettingsService, ApiSettingsService>();
 builder.Services.AddScoped<IExternalApiAuthorizationService, ExternalApiAuthorizationService>();
+builder.Services.AddScoped<IDefaultApiAuthorizationProvider, DefaultApiAuthorizationProvider>();
 builder.Services.AddScoped<IExternalApiClientService, ExternalApiClientService>();
 builder.Services.AddScoped<ISearchRequestService, SearchRequestService>();
 
