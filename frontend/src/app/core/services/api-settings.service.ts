@@ -13,14 +13,9 @@ import { environment } from '../../../environments/environment';
 type AuthorizationType = 'None' | 'Bearer' | 'ApiKey' | 'Basic';
 
 interface ApiSettingsAuthorizationFields {
-  requiresAuthorization?: boolean;
-  authorizationType?: AuthorizationType;
   tokenUrl?: string;
   username?: string;
   password?: string;
-  apiKey?: string;
-  clientId?: string;
-  clientSecret?: string;
 }
 
 interface BackendApiEndpointHeader {
@@ -38,8 +33,6 @@ interface BackendApiEndpoint {
   tokenEndpointUrl?: string;
   username?: string;
   password?: string;
-  clientId?: string;
-  clientSecret?: string;
   headers?: BackendApiEndpointHeader[];
 }
 
@@ -102,25 +95,20 @@ export class ApiSettingsService {
 
   private mapFromBackend(item: BackendApiSettings): ApiSettings {
     const endpoints = item.endpoints ?? [];
-    const primaryEndpoint = endpoints[0];
-    const authorizationType = primaryEndpoint?.authorizationType ?? 'None';
-    const requiresAuthorization = primaryEndpoint?.requiresAuthorization ?? false;
-    const apiKeyHeader = primaryEndpoint?.headers?.find(header =>
-      header.name.toLowerCase() === 'x-api-key');
+    const primaryEndpoint = endpoints.find(endpoint => endpoint.authorizationType === 'Bearer') ?? endpoints[0];
 
     return {
       id: item.id,
       name: item.name,
       baseUrl: item.baseUrl,
-      endpointUrls: JSON.stringify(endpoints.map(endpoint => endpoint.url)),
-      authType: requiresAuthorization ? authorizationType : 'None',
-      requiresAuthorization,
-      authorizationType,
+      endpointUrls: '[]',
+      authType: 'Bearer',
+      requiresAuthorization: true,
+      authorizationType: 'Bearer',
       tokenUrl: primaryEndpoint?.tokenEndpointUrl,
       username: primaryEndpoint?.username,
       password: undefined,
-      apiKey: apiKeyHeader?.value,
-      clientId: primaryEndpoint?.clientId,
+      apiKey: undefined,
       timeoutSeconds: item.timeoutSeconds,
       isActive: item.isActive,
       createdAt: item.createdAt,
@@ -143,59 +131,44 @@ export class ApiSettingsService {
   private buildEndpoints(
     request: (CreateApiSettingsRequest | UpdateApiSettingsRequest) & ApiSettingsAuthorizationFields
   ): BackendApiEndpoint[] {
-    const urls = this.parseEndpointUrls(request.endpointUrls);
-    const requiresAuthorization = request.requiresAuthorization ?? false;
-    const authorizationType = requiresAuthorization
-      ? request.authorizationType ?? 'None'
-      : 'None';
+    const endpointUrl = this.resolveEndpointUrl(request);
 
-    return urls.map((url, index) => ({
-      name: this.buildEndpointName(url, index),
-      url,
+    return [{
+      name: this.buildEndpointName(request.name, endpointUrl),
+      url: endpointUrl,
       httpMethod: 'GET',
-      requiresAuthorization,
-      authorizationType,
-      tokenEndpointUrl: authorizationType === 'Bearer' ? request.tokenUrl || undefined : undefined,
-      username: authorizationType === 'Bearer' || authorizationType === 'Basic'
-        ? request.username || undefined
-        : undefined,
-      password: authorizationType === 'Bearer' || authorizationType === 'Basic'
-        ? request.password || undefined
-        : undefined,
-      clientId: authorizationType === 'Bearer' ? request.clientId || undefined : undefined,
-      clientSecret: authorizationType === 'Bearer' ? request.clientSecret || undefined : undefined,
-      headers: authorizationType === 'ApiKey' && request.apiKey
-        ? [{ name: 'X-Api-Key', value: request.apiKey }]
-        : []
-    }));
+      requiresAuthorization: true,
+      authorizationType: 'Bearer',
+      tokenEndpointUrl: request.tokenUrl || undefined,
+      username: request.username || undefined,
+      password: request.password || undefined,
+      headers: []
+    }];
   }
 
-  private parseEndpointUrls(endpointUrls?: string): string[] {
-    if (!endpointUrls) {
-      return [];
+  private resolveEndpointUrl(
+    request: (CreateApiSettingsRequest | UpdateApiSettingsRequest) & ApiSettingsAuthorizationFields
+  ): string {
+    const tokenUrl = request.tokenUrl?.trim();
+    if (tokenUrl) {
+      return tokenUrl;
     }
 
-    try {
-      const parsed = JSON.parse(endpointUrls) as unknown;
-      if (Array.isArray(parsed)) {
-        return parsed
-          .filter((value): value is string => typeof value === 'string')
-          .map(value => value.trim())
-          .filter(Boolean);
-      }
-    } catch {
-      const normalized = endpointUrls.trim();
-      if (normalized) {
-        return [normalized];
-      }
+    const baseUrl = request.baseUrl?.trim();
+    if (baseUrl) {
+      return baseUrl;
     }
 
-    return [];
+    return '/';
   }
 
-  private buildEndpointName(url: string, index: number): string {
-    const normalized = url.trim();
-    return normalized || `Endpoint ${index + 1}`;
+  private buildEndpointName(name: string | undefined, endpointUrl: string): string {
+    const normalizedName = name?.trim();
+    if (normalizedName) {
+      return normalizedName;
+    }
+
+    return `Authorization ${endpointUrl}`;
   }
 }
 

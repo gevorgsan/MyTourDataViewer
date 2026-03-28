@@ -164,24 +164,12 @@ public class ExternalApiAuthorizationService : IExternalApiAuthorizationService
 
         if (!string.IsNullOrWhiteSpace(endpoint.Username))
         {
-            payload["username"] = endpoint.Username;
+            payload["email"] = endpoint.Username;
         }
 
         if (!string.IsNullOrWhiteSpace(endpoint.Password))
         {
             payload["password"] = endpoint.Password;
-        }
-
-        if (!string.IsNullOrWhiteSpace(endpoint.ClientId))
-        {
-            payload["client_id"] = endpoint.ClientId;
-            payload["clientId"] = endpoint.ClientId;
-        }
-
-        if (!string.IsNullOrWhiteSpace(endpoint.ClientSecret))
-        {
-            payload["client_secret"] = endpoint.ClientSecret;
-            payload["clientSecret"] = endpoint.ClientSecret;
         }
 
         return payload;

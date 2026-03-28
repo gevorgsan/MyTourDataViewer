@@ -1,8 +1,10 @@
 <div class="api-settings-container">
   <div class="header">
-    <h2>External API Settings</h2>
-    <button class="btn btn-primary" (click)="openCreate()">+ Add API</button>
+    <h2>External API Authorization Settings</h2>
+    <button class="btn btn-primary" (click)="openCreate()">+ Add Authorization</button>
   </div>
+
+  <p class="hint">Use this section to store and manage external API authorization settings only.</p>
 
   <p *ngIf="error" class="error">{{ error }}</p>
 
@@ -13,7 +15,7 @@
       <tr>
         <th>Name</th>
         <th>Base URL</th>
-        <th>Auth Type</th>
+        <th>Token URL</th>
         <th>Timeout (s)</th>
         <th>Active</th>
         <th>Actions</th>
@@ -23,7 +25,7 @@
       <tr *ngFor="let item of items">
         <td>{{ item.name }}</td>
         <td>{{ item.baseUrl }}</td>
-        <td>{{ item.authType }}</td>
+        <td>{{ item.tokenUrl || '-' }}</td>
         <td>{{ item.timeoutSeconds }}</td>
         <td>{{ item.isActive ? 'Yes' : 'No' }}</td>
         <td class="actions">
@@ -53,7 +55,7 @@
 
   <!-- Add / Edit form -->
   <form *ngIf="showForm" [formGroup]="form" (ngSubmit)="save()" class="settings-form">
-    <h3>{{ editingId ? 'Edit API Configuration' : 'New API Configuration' }}</h3>
+    <h3>{{ editingId ? 'Edit Authorization Configuration' : 'New Authorization Configuration' }}</h3>
 
     <div class="form-row">
       <label>Name *</label>
@@ -66,66 +68,19 @@
     </div>
 
     <div class="form-row">
-      <label>Endpoint URLs (JSON array)</label>
-      <input formControlName="endpointUrls" type="text" placeholder='["/data", "/stats"]' />
+      <label>Token URL</label>
+      <input formControlName="tokenUrl" type="url" placeholder="https://api.example.com/login" />
     </div>
 
     <div class="form-row">
-      <label>
-        <input formControlName="requiresAuthorization" type="checkbox" />
-        Requires Authorization
-      </label>
+      <label>Email</label>
+      <input formControlName="username" type="text" />
     </div>
 
-    <ng-container *ngIf="form.get('requiresAuthorization')?.value">
-      <div class="form-row">
-        <label>Authorization Type *</label>
-        <select formControlName="authorizationType">
-          <option *ngFor="let t of authorizationTypes" [value]="t">{{ t }}</option>
-        </select>
-      </div>
-
-      <ng-container [ngSwitch]="form.get('authorizationType')?.value">
-        <ng-container *ngSwitchCase="'Bearer'">
-          <div class="form-row">
-            <label>Token URL</label>
-            <input formControlName="tokenUrl" type="url" placeholder="https://api.example.com/login" />
-          </div>
-          <div class="form-row">
-            <label>Username</label>
-            <input formControlName="username" type="text" />
-          </div>
-          <div class="form-row">
-            <label>Password</label>
-            <input formControlName="password" type="password" placeholder="Leave blank to keep current" />
-          </div>
-          <div class="form-row">
-            <label>Client ID</label>
-            <input formControlName="clientId" type="text" placeholder="my-client-id" />
-          </div>
-          <div class="form-row">
-            <label>Client Secret</label>
-            <input formControlName="clientSecret" type="password" placeholder="Leave blank to keep current" />
-          </div>
-        </ng-container>
-
-        <ng-container *ngSwitchCase="'Basic'">
-          <div class="form-row">
-            <label>Username</label>
-            <input formControlName="username" type="text" />
-          </div>
-          <div class="form-row">
-            <label>Password</label>
-            <input formControlName="password" type="password" placeholder="Leave blank to keep current" />
-          </div>
-        </ng-container>
-
-        <div *ngSwitchCase="'ApiKey'" class="form-row">
-          <label>API Key</label>
-          <input formControlName="apiKey" type="text" />
-        </div>
-      </ng-container>
-    </ng-container>
+    <div class="form-row">
+      <label>Password</label>
+      <input formControlName="password" type="password" placeholder="Leave blank to keep current" />
+    </div>
 
     <div class="form-row">
       <label>Timeout (seconds)</label>

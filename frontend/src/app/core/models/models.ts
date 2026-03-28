@@ -49,7 +49,6 @@ export interface ApiSettings {
   username?: string;
   password?: string;
   apiKey?: string;
-  clientId?: string;
   timeoutSeconds: number;
   isActive: boolean;
   createdAt: string;
@@ -63,8 +62,6 @@ export interface CreateApiSettingsRequest {
   username?: string;
   password?: string;
   apiKey?: string;
-  clientId?: string;
-  clientSecret?: string;
   timeoutSeconds?: number;
 }
 
@@ -75,8 +72,6 @@ export interface UpdateApiSettingsRequest {
   username?: string;
   password?: string;
   apiKey?: string;
-  clientId?: string;
-  clientSecret?: string;
   timeoutSeconds?: number;
   isActive?: boolean;
 }
