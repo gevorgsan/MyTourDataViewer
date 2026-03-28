@@ -11,4 +11,13 @@ public interface ISearchRequestService
     Task<IList<SearchRequestItem>> SearchAsync(
         SearchRequestDto request,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Calls the external GetRequestHistory endpoint and returns history entries for the given request,
+    /// ordered by <c>changedAt</c> descending, with <c>oldValuesJson</c> and <c>newValuesJson</c> parsed
+    /// into structured dictionaries.
+    /// </summary>
+    Task<IList<RequestHistoryItemDto>> GetRequestHistoryAsync(
+        int requestId,
+        CancellationToken cancellationToken = default);
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { SearchRequestService } from '../../core/services/search-request.service';
-import { SearchRequestItem } from '../../core/models/models';
+import { RequestHistoryItem, SearchRequestItem } from '../../core/models/models';
 
 type LoadState = 'idle' | 'loading' | 'success' | 'error';
 
@@ -17,6 +17,12 @@ export class SearchRequestComponent implements OnInit {
   searchState: LoadState = 'idle';
   results: SearchRequestItem[] = [];
   errorMessage = '';
+
+  selectedRequestId: number | null = null;
+  historyState: LoadState = 'idle';
+  history: RequestHistoryItem[] = [];
+  historyErrorMessage = '';
+  expandedRows = new Set<number>();
 
   constructor(
     private fb: FormBuilder,
@@ -43,6 +49,9 @@ export class SearchRequestComponent implements OnInit {
     this.searchState = 'loading';
     this.results = [];
     this.errorMessage = '';
+    this.selectedRequestId = null;
+    this.history = [];
+    this.historyState = 'idle';
 
     this.searchRequestService.search({
       createdFrom,
@@ -59,6 +68,45 @@ export class SearchRequestComponent implements OnInit {
         this.errorMessage = this.extractErrorMessage(err);
       }
     });
+  }
+
+  selectRequest(item: SearchRequestItem): void {
+    if (this.selectedRequestId === item.id) {
+      return;
+    }
+    this.selectedRequestId = item.id;
+    this.history = [];
+    this.expandedRows.clear();
+    this.historyState = 'loading';
+    this.historyErrorMessage = '';
+
+    this.searchRequestService.getHistory(item.id).subscribe({
+      next: records => {
+        this.history = records;
+        this.historyState = 'success';
+      },
+      error: err => {
+        this.historyState = 'error';
+        this.historyErrorMessage = this.extractErrorMessage(err);
+      }
+    });
+  }
+
+  toggleRow(index: number): void {
+    if (this.expandedRows.has(index)) {
+      this.expandedRows.delete(index);
+    } else {
+      this.expandedRows.add(index);
+    }
+  }
+
+  isExpanded(index: number): boolean {
+    return this.expandedRows.has(index);
+  }
+
+  getValueKeys(obj: Record<string, string | null> | undefined | null): string[] {
+    if (!obj) return [];
+    return Object.keys(obj);
   }
 
   private extractErrorMessage(err: any): string {

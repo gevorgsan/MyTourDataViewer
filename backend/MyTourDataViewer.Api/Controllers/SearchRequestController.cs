@@ -46,4 +46,25 @@ public class SearchRequestController : ControllerBase
             return StatusCode(502, new { message = ex.Message });
         }
     }
+
+    /// <summary>Retrieve history for a specific request via the external API.</summary>
+    [HttpGet("{requestId:int}/history")]
+    public async Task<IActionResult> GetHistory(int requestId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var history = await _searchRequestService.GetRequestHistoryAsync(requestId, cancellationToken);
+            return Ok(history);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "GetRequestHistory configuration error.");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "GetRequestHistory external API error.");
+            return StatusCode(502, new { message = ex.Message });
+        }
+    }
 }

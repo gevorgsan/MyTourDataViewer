@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { SearchRequestRequest, SearchRequestItem } from '../models/models';
+import { SearchRequestRequest, SearchRequestItem, RequestHistoryItem } from '../models/models';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -14,5 +14,9 @@ export class SearchRequestService {
 
   search(request: SearchRequestRequest): Observable<SearchRequestItem[]> {
     return this.http.post<SearchRequestItem[]>(this.baseUrl, request);
+  }
+
+  getHistory(requestId: number): Observable<RequestHistoryItem[]> {
+    return this.http.get<RequestHistoryItem[]>(`${this.baseUrl}/${requestId}/history`);
   }
 }

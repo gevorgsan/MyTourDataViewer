@@ -102,6 +102,15 @@ export interface SearchRequestItem {
   createdDate?: string;
 }
 
+export interface RequestHistoryItem {
+  requestId: number;
+  changeType?: string;
+  changedAt: string;
+  changedBy?: string;
+  oldValues?: Record<string, string | null>;
+  newValues?: Record<string, string | null>;
+}
+
 export interface TestConnectionRequest {
   apiSettingsId: number;
   endpointPath?: string;
