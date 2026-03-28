@@ -1,91 +1,99 @@
 .api-settings-container {
-  padding: 1.5rem;
+  h2 {
+    font-size: 1.4rem;
+    color: var(--color-primary);
+  }
 
   .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  /* ---- Table ---- */
+  .table-wrapper {
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
   }
 
   table {
     width: 100%;
     border-collapse: collapse;
+    background: var(--color-surface);
+    min-width: 580px;
 
     th, td {
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #dee2e6;
+      padding: 0.6rem 0.9rem;
+      border-bottom: 1px solid var(--color-border);
       text-align: left;
+      font-size: 0.875rem;
     }
 
-    th { background: #f8f9fa; font-weight: 600; }
-    tr:hover td { background: #f1f3f5; }
+    th {
+      background: var(--color-surface-alt);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-text-secondary);
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
 
     td.actions { white-space: nowrap; display: flex; gap: 0.4rem; }
-    td.empty { text-align: center; color: #6c757d; }
+    td.empty { text-align: center; color: var(--color-text-secondary); padding: 1.5rem; }
   }
 
+  /* ---- Test result banner ---- */
   .test-result {
     margin: 0.75rem 0;
-    padding: 0.6rem 1rem;
-    border-radius: 4px;
+    padding: 0.65rem 1rem;
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
 
-    &.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-    &.failure  { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    &.success { background: var(--color-success-bg); color: var(--color-success-text); border: 1px solid #6ee7b7; }
+    &.failure  { background: var(--color-error-bg);   color: var(--color-error-text);   border: 1px solid #fecaca; }
 
-    .close { margin-left: auto; background: none; border: none; cursor: pointer; font-size: 1.1rem; }
+    .close { margin-left: auto; background: none; border: none; cursor: pointer; font-size: 1.1rem; opacity: 0.6; &:hover { opacity: 1; } }
   }
 
+  /* ---- Settings form ---- */
   .settings-form {
-    max-width: 540px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    max-width: 560px;
     margin-top: 1rem;
+    box-shadow: var(--shadow-sm);
 
-    h3 { margin-bottom: 1rem; }
+    h3 { margin-bottom: 1.25rem; font-size: 1.1rem; color: var(--color-primary); }
 
     .form-row {
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 0.3rem;
 
-      label { font-weight: 500; font-size: 0.9rem; }
-      input[type=text],
-      input[type=url],
-      input[type=number],
-      input[type=password],
-      select {
-        padding: 0.4rem 0.6rem;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        font-size: 0.95rem;
-      }
+      label { font-weight: 500; font-size: 0.875rem; }
     }
 
     .form-actions {
-      margin-top: 1rem;
+      margin-top: 1.25rem;
       display: flex;
       gap: 0.5rem;
+      flex-wrap: wrap;
     }
   }
 
-  .btn {
-    padding: 0.4rem 0.9rem;
-    border: 1px solid #6c757d;
-    border-radius: 4px;
-    cursor: pointer;
-    background: #fff;
-    font-size: 0.9rem;
-
-    &.btn-primary { background: #0d6efd; color: #fff; border-color: #0d6efd; }
-    &.btn-secondary { background: #6c757d; color: #fff; border-color: #6c757d; }
-    &.btn-danger { background: #dc3545; color: #fff; border-color: #dc3545; }
-    &.btn-sm { padding: 0.25rem 0.6rem; font-size: 0.8rem; }
-    &:disabled { opacity: 0.6; cursor: not-allowed; }
-  }
-
-  .error { color: #dc3545; font-size: 0.9rem; }
+  .error { color: var(--color-error-text); font-size: 0.875rem; margin-top: 0.25rem; }
 }

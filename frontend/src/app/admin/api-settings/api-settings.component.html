@@ -7,7 +7,8 @@
   <p *ngIf="error" class="error">{{ error }}</p>
 
   <!-- Settings table -->
-  <table *ngIf="!showForm">
+  <div class="table-wrapper" *ngIf="!showForm">
+  <table>
     <thead>
       <tr>
         <th>Name</th>
@@ -40,6 +41,7 @@
       </tr>
     </tbody>
   </table>
+  </div>
 
   <!-- Test result banner -->
   <div *ngIf="testResult" class="test-result" [class.success]="testResult.success" [class.failure]="!testResult.success">
