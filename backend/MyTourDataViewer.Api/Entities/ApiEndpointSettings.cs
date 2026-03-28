@@ -18,6 +18,7 @@ public class ApiEndpointSettings
     public string? Password { get; set; }
     public string? ClientId { get; set; }
     public string? ClientSecret { get; set; }
+    public string? ApiKey { get; set; }
 
     public ICollection<ApiEndpointHeader> Headers { get; set; } = [];
 }

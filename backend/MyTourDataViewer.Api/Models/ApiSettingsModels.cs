@@ -37,6 +37,7 @@ public class ApiEndpointUpsertRequest
     public string? Password { get; set; }
     public string? ClientId { get; set; }
     public string? ClientSecret { get; set; }
+    public string? ApiKey { get; set; }
     public IList<ApiEndpointHeaderUpsertRequest> Headers { get; set; } = [];
 }
 

@@ -58,6 +58,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.ClientId)
                 .HasMaxLength(256);
 
+            entity.Property(e => e.ApiKey)
+                .HasMaxLength(512);
+
             entity.HasMany(e => e.Headers)
                 .WithOne(h => h.ApiEndpointSettings)
                 .HasForeignKey(h => h.ApiEndpointSettingsId)
