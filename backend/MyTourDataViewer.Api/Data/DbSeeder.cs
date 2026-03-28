@@ -24,9 +24,10 @@ public static class DbSeeder
 
         // Seed default admin (credentials should be changed after first login)
         const string adminUser = "admin";
-        if (await userManager.FindByNameAsync(adminUser) == null)
+        var admin = await userManager.FindByNameAsync(adminUser);
+        if (admin == null)
         {
-            var admin = new ApplicationUser
+            admin = new ApplicationUser
             {
                 UserName = adminUser,
                 Email = "admin@mytourviewer.local",
@@ -38,9 +39,14 @@ public static class DbSeeder
             var result = await userManager.CreateAsync(admin, "Admin@123456");
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(admin, "Administrator");
                 logger.LogInformation("Default admin account created");
             }
+        }
+
+        if (admin != null && !await userManager.IsInRoleAsync(admin, "Administrator"))
+        {
+            await userManager.AddToRoleAsync(admin, "Administrator");
+            logger.LogInformation("Granted Administrator role to default admin account");
         }
     }
 }

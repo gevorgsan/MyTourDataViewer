@@ -13,28 +13,23 @@ export class UserService {
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<User[]> {
-    // TODO: implement
-    throw new Error('Not implemented');
+    return this.http.get<User[]>(this.baseUrl);
   }
 
   getById(id: string): Observable<User> {
-    // TODO: implement
-    throw new Error('Not implemented');
+    return this.http.get<User>(`${this.baseUrl}/${id}`);
   }
 
   create(request: CreateUserRequest): Observable<User> {
-    // TODO: implement
-    throw new Error('Not implemented');
+    return this.http.post<User>(this.baseUrl, request);
   }
 
   update(id: string, request: UpdateUserRequest): Observable<void> {
-    // TODO: implement
-    throw new Error('Not implemented');
+    return this.http.put<void>(`${this.baseUrl}/${id}`, request);
   }
 
   delete(id: string): Observable<void> {
-    // TODO: implement
-    throw new Error('Not implemented');
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 }
 

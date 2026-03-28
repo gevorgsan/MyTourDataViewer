@@ -13,7 +13,7 @@
     <!-- TODO: show Admin links only for Administrator role -->
     <a routerLink="/admin/users" routerLinkActive="active">Users</a>
     <a routerLink="/admin/api-settings" routerLinkActive="active">API Settings</a>
-    <button class="btn-logout">Logout</button>
+    <button type="button" class="btn-logout" (click)="logout()">Logout</button>
   </div>
 </nav>
 

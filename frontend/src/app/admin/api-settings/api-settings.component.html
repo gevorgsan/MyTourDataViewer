@@ -71,31 +71,52 @@
     </div>
 
     <div class="form-row">
-      <label>Auth Type *</label>
-      <select formControlName="authType">
-        <option *ngFor="let t of authTypes" [value]="t">{{ t }}</option>
-      </select>
+      <label>
+        <input formControlName="requiresAuthorization" type="checkbox" />
+        Requires Authorization
+      </label>
     </div>
 
-    <ng-container [ngSwitch]="form.get('authType')?.value">
-      <div *ngSwitchCase="'Basic'" class="form-row">
-        <label>Username</label>
-        <input formControlName="username" type="text" />
-      </div>
-      <div *ngSwitchCase="'Basic'" class="form-row">
-        <label>Password</label>
-        <input formControlName="password" type="password" placeholder="Leave blank to keep current" />
+    <ng-container *ngIf="form.get('requiresAuthorization')?.value">
+      <div class="form-row">
+        <label>Authorization Type *</label>
+        <select formControlName="authorizationType">
+          <option *ngFor="let t of authorizationTypes" [value]="t">{{ t }}</option>
+        </select>
       </div>
 
-      <div *ngSwitchCase="'ApiKey'" class="form-row">
-        <label>API Key</label>
-        <input formControlName="apiKey" type="text" />
-      </div>
+      <ng-container [ngSwitch]="form.get('authorizationType')?.value">
+        <ng-container *ngSwitchCase="'Bearer'">
+          <div class="form-row">
+            <label>Token URL</label>
+            <input formControlName="tokenUrl" type="url" placeholder="https://api.example.com/login" />
+          </div>
+          <div class="form-row">
+            <label>Username</label>
+            <input formControlName="username" type="text" />
+          </div>
+          <div class="form-row">
+            <label>Password</label>
+            <input formControlName="password" type="password" placeholder="Leave blank to keep current" />
+          </div>
+        </ng-container>
 
-      <div *ngSwitchCase="'Bearer'" class="form-row">
-        <label>Bearer Token</label>
-        <input formControlName="bearerToken" type="text" />
-      </div>
+        <ng-container *ngSwitchCase="'Basic'">
+          <div class="form-row">
+            <label>Username</label>
+            <input formControlName="username" type="text" />
+          </div>
+          <div class="form-row">
+            <label>Password</label>
+            <input formControlName="password" type="password" placeholder="Leave blank to keep current" />
+          </div>
+        </ng-container>
+
+        <div *ngSwitchCase="'ApiKey'" class="form-row">
+          <label>API Key</label>
+          <input formControlName="apiKey" type="text" />
+        </div>
+      </ng-container>
     </ng-container>
 
     <div class="form-row">

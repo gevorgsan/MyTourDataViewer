@@ -43,7 +43,11 @@ export interface ApiSettings {
   baseUrl: string;
   endpointUrls: string;
   authType: string;
+  requiresAuthorization?: boolean;
+  authorizationType?: 'None' | 'Bearer' | 'ApiKey' | 'Basic';
+  tokenUrl?: string;
   username?: string;
+  password?: string;
   apiKey?: string;
   timeoutSeconds: number;
   isActive: boolean;

@@ -1,16 +1,38 @@
 <div class="users-container">
   <h2>User Management</h2>
-  <!-- TODO: implement user list, create/edit/disable actions -->
-  <p>Administrator role required.</p>
+  <p>Users with the Administrator role are labeled and highlighted below.</p>
+
+  <p *ngIf="state === 'loading'" class="state-msg">Loading users...</p>
+  <p *ngIf="state === 'error'" class="state-msg error">{{ errorMessage }}</p>
+
   <div class="table-wrapper">
-  <table>
-    <thead>
-      <tr><th>Username</th><th>Full Name</th><th>Email</th><th>Role</th><th>Active</th><th>Actions</th></tr>
-    </thead>
-    <tbody>
-      <!-- rows generated dynamically -->
-    </tbody>
-  </table>
+    <table>
+      <thead>
+        <tr><th>Username</th><th>Full Name</th><th>Email</th><th>Role</th><th>Active</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="state === 'success' && users.length === 0">
+          <td colspan="6" class="empty-row">No users found.</td>
+        </tr>
+        <tr *ngFor="let user of users" [class.row-admin]="isAdministrator(user)">
+          <td>
+            <div class="username-cell">
+              <span>{{ user.username }}</span>
+              <span *ngIf="isAdministrator(user)" class="role-badge">Administrator</span>
+            </div>
+          </td>
+          <td>{{ user.fullName }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ roleLabel(user) }}</td>
+          <td>
+            <span [class.active-text]="user.isActive" [class.inactive-text]="!user.isActive">
+              {{ user.isActive ? 'Active' : 'Disabled' }}
+            </span>
+          </td>
+          <td class="actions-cell">--</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
 

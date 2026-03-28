@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using MyTourDataViewer.Api.Data;
 using MyTourDataViewer.Api.Entities;
@@ -19,13 +20,23 @@ public class ApiSettingsService : IApiSettingsService
 
     public async Task<IEnumerable<ApiSettingsDto>> GetAllAsync()
     {
-        var entries = await _db.ApiSettings.AsNoTracking().ToListAsync();
+        var entries = await _db.ApiSettings
+            .AsNoTracking()
+            .Include(a => a.Endpoints)
+            .ThenInclude(e => e.Headers)
+            .ToListAsync();
+
         return entries.Select(MapToDto);
     }
 
     public async Task<ApiSettingsDto?> GetByIdAsync(int id)
     {
-        var entry = await _db.ApiSettings.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id);
+        var entry = await _db.ApiSettings
+            .AsNoTracking()
+            .Include(a => a.Endpoints)
+            .ThenInclude(e => e.Headers)
+            .FirstOrDefaultAsync(a => a.Id == id);
+
         return entry == null ? null : MapToDto(entry);
     }
 
@@ -35,12 +46,8 @@ public class ApiSettingsService : IApiSettingsService
         {
             Name           = request.Name,
             BaseUrl        = request.BaseUrl,
-            EndpointUrls   = request.EndpointUrls,
-            AuthType       = request.AuthType,
-            Username       = request.Username,
-            Password       = request.Password,
-            ApiKey         = request.ApiKey,
-            BearerToken    = request.BearerToken,
+            EndpointUrls   = SerializeEndpointUrls(request.Endpoints),
+            Endpoints      = request.Endpoints.Select(MapEndpoint).ToList(),
             TimeoutSeconds = request.TimeoutSeconds,
             IsActive       = true,
             CreatedAt      = DateTime.UtcNow,
@@ -55,19 +62,26 @@ public class ApiSettingsService : IApiSettingsService
 
     public async Task<(bool Success, string? Error)> UpdateAsync(int id, UpdateApiSettingsRequest request)
     {
-        var entry = await _db.ApiSettings.FindAsync(id);
+        var entry = await _db.ApiSettings
+            .Include(a => a.Endpoints)
+            .ThenInclude(e => e.Headers)
+            .FirstOrDefaultAsync(a => a.Id == id);
+
         if (entry == null) return (false, "Not found.");
 
         if (request.Name          != null)  entry.Name          = request.Name;
         if (request.BaseUrl       != null)  entry.BaseUrl       = request.BaseUrl;
-        if (request.EndpointUrls  != null)  entry.EndpointUrls  = request.EndpointUrls;
-        if (request.AuthType      != null)  entry.AuthType      = request.AuthType;
-        if (request.Username      != null)  entry.Username      = request.Username;
-        if (request.Password      != null)  entry.Password      = request.Password;
-        if (request.ApiKey        != null)  entry.ApiKey        = request.ApiKey;
-        if (request.BearerToken   != null)  entry.BearerToken   = request.BearerToken;
         if (request.TimeoutSeconds.HasValue) entry.TimeoutSeconds = request.TimeoutSeconds.Value;
         if (request.IsActive.HasValue)      entry.IsActive      = request.IsActive.Value;
+
+        if (request.Endpoints != null)
+        {
+            _db.ApiEndpointHeaders.RemoveRange(entry.Endpoints.SelectMany(e => e.Headers));
+            _db.ApiEndpointSettings.RemoveRange(entry.Endpoints);
+            entry.Endpoints = request.Endpoints.Select(MapEndpoint).ToList();
+            entry.EndpointUrls = SerializeEndpointUrls(request.Endpoints);
+        }
+
         entry.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
@@ -89,13 +103,58 @@ public class ApiSettingsService : IApiSettingsService
         Id             = e.Id,
         Name           = e.Name,
         BaseUrl        = e.BaseUrl,
-        EndpointUrls   = e.EndpointUrls,
-        AuthType       = e.AuthType,
-        Username       = e.Username,
-        ApiKey         = e.ApiKey,
+        Endpoints      = e.Endpoints.Select(MapEndpointDto).ToList(),
         TimeoutSeconds = e.TimeoutSeconds,
         IsActive       = e.IsActive,
         CreatedAt      = e.CreatedAt,
         UpdatedAt      = e.UpdatedAt
     };
+
+    private static ApiEndpointSettings MapEndpoint(ApiEndpointUpsertRequest request) => new()
+    {
+        Name = request.Name,
+        Url = request.Url,
+        HttpMethod = request.HttpMethod,
+        RequiresAuthorization = request.RequiresAuthorization,
+        AuthorizationType = request.AuthorizationType,
+        TokenEndpointUrl = request.TokenEndpointUrl,
+        Username = request.Username,
+        Password = request.Password,
+        ClientId = request.ClientId,
+        ClientSecret = request.ClientSecret,
+        Headers = request.Headers.Select(MapHeader).ToList()
+    };
+
+    private static ApiEndpointHeader MapHeader(ApiEndpointHeaderUpsertRequest request) => new()
+    {
+        Name = request.Name,
+        Value = request.Value
+    };
+
+    private static ApiEndpointDto MapEndpointDto(ApiEndpointSettings endpoint) => new()
+    {
+        Id = endpoint.Id,
+        Name = endpoint.Name,
+        Url = endpoint.Url,
+        HttpMethod = endpoint.HttpMethod,
+        RequiresAuthorization = endpoint.RequiresAuthorization,
+        AuthorizationType = endpoint.AuthorizationType,
+        TokenEndpointUrl = endpoint.TokenEndpointUrl,
+        Username = endpoint.Username,
+        ClientId = endpoint.ClientId,
+        Headers = endpoint.Headers.Select(MapHeaderDto).ToList()
+    };
+
+    private static ApiEndpointHeaderDto MapHeaderDto(ApiEndpointHeader header) => new()
+    {
+        Id = header.Id,
+        Name = header.Name,
+        Value = header.Value
+    };
+
+    private static string SerializeEndpointUrls(IEnumerable<ApiEndpointUpsertRequest> endpoints)
+    {
+        var urls = endpoints.Select(e => e.Url).ToArray();
+        return JsonSerializer.Serialize(urls);
+    }
 }

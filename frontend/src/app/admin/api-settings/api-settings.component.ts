@@ -21,6 +21,7 @@ export class ApiSettingsComponent implements OnInit {
   testingId: number | null = null;
 
   readonly authTypes = ['None', 'ApiKey', 'Basic', 'Bearer'];
+  readonly authorizationTypes = ['None', 'Bearer', 'ApiKey', 'Basic'] as const;
 
   constructor(
     private svc: ApiSettingsService,
@@ -37,6 +38,9 @@ export class ApiSettingsComponent implements OnInit {
       name:           ['', Validators.required],
       baseUrl:        ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
       endpointUrls:   ['[]'],
+      requiresAuthorization: [false],
+      authorizationType: ['None', Validators.required],
+      tokenUrl:       [''],
       authType:       ['None', Validators.required],
       username:       [''],
       password:       [''],
@@ -45,6 +49,58 @@ export class ApiSettingsComponent implements OnInit {
       timeoutSeconds: [30, [Validators.required, Validators.min(0), Validators.max(300)]],
       isActive:       [true]
     });
+
+    this.form.get('requiresAuthorization')?.valueChanges.subscribe(requiresAuthorization => {
+      if (!requiresAuthorization) {
+        this.form.patchValue({
+          authorizationType: 'None',
+          authType: 'None',
+          tokenUrl: '',
+          username: '',
+          password: '',
+          apiKey: '',
+          bearerToken: ''
+        }, { emitEvent: false });
+      }
+
+      this.updateAuthorizationControls();
+    });
+
+    this.form.get('authorizationType')?.valueChanges.subscribe(authorizationType => {
+      const authType = this.form.get('requiresAuthorization')?.value
+        ? authorizationType ?? 'None'
+        : 'None';
+
+      this.form.patchValue({ authType }, { emitEvent: false });
+      this.updateAuthorizationControls();
+    });
+
+    this.updateAuthorizationControls();
+  }
+
+  private updateAuthorizationControls(): void {
+    const requiresAuthorization = this.form.get('requiresAuthorization')?.value === true;
+    const authorizationType = this.form.get('authorizationType')?.value ?? 'None';
+
+    this.toggleControl('authorizationType', requiresAuthorization);
+    this.toggleControl('tokenUrl', requiresAuthorization && authorizationType === 'Bearer');
+    this.toggleControl('username', requiresAuthorization && (authorizationType === 'Bearer' || authorizationType === 'Basic'));
+    this.toggleControl('password', requiresAuthorization && (authorizationType === 'Bearer' || authorizationType === 'Basic'));
+    this.toggleControl('apiKey', requiresAuthorization && authorizationType === 'ApiKey');
+  }
+
+  private toggleControl(controlName: string, enabled: boolean): void {
+    const control = this.form.get(controlName);
+    if (!control) {
+      return;
+    }
+
+    if (enabled) {
+      control.enable({ emitEvent: false });
+      return;
+    }
+
+    control.disable({ emitEvent: false });
   }
 
   private load(): void {
@@ -56,7 +112,15 @@ export class ApiSettingsComponent implements OnInit {
 
   openCreate(): void {
     this.editingId = null;
-    this.form.reset({ authType: 'None', endpointUrls: '[]', timeoutSeconds: 30, isActive: true });
+    this.form.reset({
+      endpointUrls: '[]',
+      requiresAuthorization: false,
+      authorizationType: 'None',
+      authType: 'None',
+      timeoutSeconds: 30,
+      isActive: true
+    });
+    this.updateAuthorizationControls();
     this.showForm = true;
     this.testResult = null;
     this.error = '';
@@ -68,6 +132,9 @@ export class ApiSettingsComponent implements OnInit {
       name:           item.name,
       baseUrl:        item.baseUrl,
       endpointUrls:   item.endpointUrls,
+      requiresAuthorization: item.requiresAuthorization ?? ((item.authorizationType ?? item.authType ?? 'None') !== 'None'),
+      authorizationType: item.authorizationType ?? item.authType ?? 'None',
+      tokenUrl:       item.tokenUrl ?? '',
       authType:       item.authType,
       username:       item.username ?? '',
       password:       '',
@@ -76,6 +143,7 @@ export class ApiSettingsComponent implements OnInit {
       timeoutSeconds: item.timeoutSeconds,
       isActive:       item.isActive
     });
+    this.updateAuthorizationControls();
     this.showForm = true;
     this.testResult = null;
     this.error = '';
@@ -95,13 +163,16 @@ export class ApiSettingsComponent implements OnInit {
     const v = this.form.value;
 
     if (this.editingId == null) {
-      const req: CreateApiSettingsRequest = {
+      const req = {
         name: v.name, baseUrl: v.baseUrl, endpointUrls: v.endpointUrls,
         authType: v.authType, username: v.username || undefined,
         password: v.password || undefined, apiKey: v.apiKey || undefined,
-        bearerToken: v.bearerToken || undefined, timeoutSeconds: v.timeoutSeconds
+        bearerToken: v.bearerToken || undefined, timeoutSeconds: v.timeoutSeconds,
+        requiresAuthorization: v.requiresAuthorization,
+        authorizationType: v.authorizationType,
+        tokenUrl: v.tokenUrl || undefined
       };
-      this.svc.create(req).subscribe({
+      this.svc.create(req as CreateApiSettingsRequest).subscribe({
         next: () => { this.saving = false; this.showForm = false; this.load(); },
         error: () => { this.saving = false; this.error = 'Failed to create.'; }
       });
@@ -111,7 +182,10 @@ export class ApiSettingsComponent implements OnInit {
         authType: v.authType, username: v.username || undefined,
         password: v.password || undefined, apiKey: v.apiKey || undefined,
         bearerToken: v.bearerToken || undefined, timeoutSeconds: v.timeoutSeconds,
-        isActive: v.isActive
+        isActive: v.isActive,
+        requiresAuthorization: v.requiresAuthorization,
+        authorizationType: v.authorizationType,
+        tokenUrl: v.tokenUrl || undefined
       };
       this.svc.update(this.editingId, req).subscribe({
         next: () => { this.saving = false; this.showForm = false; this.load(); },

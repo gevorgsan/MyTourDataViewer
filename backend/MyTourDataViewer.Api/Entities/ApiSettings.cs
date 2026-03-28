@@ -6,6 +6,8 @@ public class ApiSettings
     public string Name { get; set; } = string.Empty;
     public string BaseUrl { get; set; } = string.Empty;
 
+    public ICollection<ApiEndpointSettings> Endpoints { get; set; } = [];
+
     /// <summary>JSON array of endpoint path strings.</summary>
     public string EndpointUrls { get; set; } = "[]";
 

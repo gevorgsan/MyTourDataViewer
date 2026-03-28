@@ -86,12 +86,14 @@ builder.Services.AddCors(opt =>
               .AllowAnyMethod()));
 
 // ── HttpClient ─────────────────────────────────────────────────────────────────
+builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
 
 // ── Application Services ───────────────────────────────────────────────────────
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IApiSettingsService, ApiSettingsService>();
+builder.Services.AddScoped<IExternalApiAuthorizationService, ExternalApiAuthorizationService>();
 builder.Services.AddScoped<IExternalApiClientService, ExternalApiClientService>();
 
 // ──────────────────────────────────────────────────────────────────────────────

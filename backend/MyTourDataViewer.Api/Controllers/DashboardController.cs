@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyTourDataViewer.Api.Services;
@@ -38,7 +39,14 @@ public class DashboardController : ControllerBase
     public async Task<IActionResult> GetAvailableApis()
     {
         var all = await _apiSettingsService.GetAllAsync();
-        var active = all.Where(a => a.IsActive).Select(a => new { a.Id, a.Name, a.BaseUrl, a.EndpointUrls });
+        var active = all.Where(a => a.IsActive).Select(a => new
+        {
+            a.Id,
+            a.Name,
+            a.BaseUrl,
+            EndpointUrls = JsonSerializer.Serialize(a.Endpoints.Select(e => e.Url))
+        });
+
         return Ok(active);
     }
 }

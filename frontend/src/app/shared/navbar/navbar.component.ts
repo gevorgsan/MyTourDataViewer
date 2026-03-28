@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   standalone: false,
@@ -8,4 +10,15 @@ import { Component } from '@angular/core';
 })
 export class NavbarComponent {
   menuOpen = false;
+
+  constructor(
+    private readonly authService: AuthService,
+    private readonly router: Router
+  ) {}
+
+  logout(): void {
+    this.menuOpen = false;
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
 }

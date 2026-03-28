@@ -63,6 +63,15 @@
   }
 }
 
+.login-error {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+  font-size: 0.875rem;
+}
+
 .btn-signin {
   margin-top: 0.5rem;
   width: 100%;
@@ -83,6 +92,12 @@
   }
 
   &:active { transform: translateY(1px); }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.7;
+    box-shadow: none;
+  }
 }
 
 .login-footer {
