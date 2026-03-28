@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using MyTourDataViewer.Api.Data;
 using MyTourDataViewer.Api.Entities;
@@ -45,8 +44,7 @@ public class ApiSettingsService : IApiSettingsService
         var entry = new ApiSettings
         {
             Name           = request.Name,
-            BaseUrl        = request.BaseUrl,
-            EndpointUrls   = SerializeEndpointUrls(request.Endpoints),
+            BaseUrl        = request.BaseUrl ?? string.Empty,
             Endpoints      = request.Endpoints.Select(MapEndpoint).ToList(),
             TimeoutSeconds = request.TimeoutSeconds,
             IsActive       = true,
@@ -79,7 +77,6 @@ public class ApiSettingsService : IApiSettingsService
             _db.ApiEndpointHeaders.RemoveRange(entry.Endpoints.SelectMany(e => e.Headers));
             _db.ApiEndpointSettings.RemoveRange(entry.Endpoints);
             entry.Endpoints = request.Endpoints.Select(MapEndpoint).ToList();
-            entry.EndpointUrls = SerializeEndpointUrls(request.Endpoints);
         }
 
         entry.UpdatedAt = DateTime.UtcNow;
@@ -151,10 +148,4 @@ public class ApiSettingsService : IApiSettingsService
         Name = header.Name,
         Value = header.Value
     };
-
-    private static string SerializeEndpointUrls(IEnumerable<ApiEndpointUpsertRequest> endpoints)
-    {
-        var urls = endpoints.Select(e => e.Url).ToArray();
-        return JsonSerializer.Serialize(urls);
-    }
 }

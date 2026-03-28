@@ -4,11 +4,13 @@ public class ApiSettings
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>Deprecated: Each endpoint now stores its own full <see cref="ApiEndpointSettings.Url"/>. Kept for backward compatibility only.</summary>
     public string BaseUrl { get; set; } = string.Empty;
 
     public ICollection<ApiEndpointSettings> Endpoints { get; set; } = [];
 
-    /// <summary>JSON array of endpoint path strings.</summary>
+    /// <summary>Deprecated: Endpoints are stored as separate <see cref="ApiEndpointSettings"/> records. This field is no longer populated.</summary>
     public string EndpointUrls { get; set; } = "[]";
 
     /// <summary>None | ApiKey | Basic | Bearer</summary>

@@ -41,8 +41,8 @@ public class ExternalApiClientService : IExternalApiClientService
         try
         {
             using var client = BuildClient(settings);
-            var url = BuildUrl(settings.BaseUrl, endpointPath);
             var endpoint = FindEndpoint(settings, endpointPath);
+            var url = endpoint?.Url ?? endpointPath;
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
 
             var authorizationError = await ApplyAuthorizationAsync(request, settings, endpoint);
@@ -82,8 +82,8 @@ public class ExternalApiClientService : IExternalApiClientService
         try
         {
             using var client = BuildClient(settings);
-            var url = BuildUrl(settings.BaseUrl, endpointPath);
             var endpoint = FindEndpoint(settings, endpointPath);
+            var url = endpoint?.Url ?? endpointPath;
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
 
             var authorizationError = await ApplyAuthorizationAsync(request, settings, endpoint);
@@ -178,13 +178,8 @@ public class ExternalApiClientService : IExternalApiClientService
         }
 
         return settings.Endpoints.FirstOrDefault(endpoint =>
-            string.Equals(NormalizeUrl(endpoint.Url), NormalizeUrl(endpointPath), StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static string BuildUrl(string baseUrl, string? endpointPath)
-    {
-        if (string.IsNullOrWhiteSpace(endpointPath)) return baseUrl;
-        return $"{baseUrl.TrimEnd('/')}/{endpointPath.TrimStart('/')}";
+            string.Equals(NormalizeUrl(endpoint.Url ?? string.Empty), NormalizeUrl(endpointPath), StringComparison.OrdinalIgnoreCase)
+            || string.Equals(endpoint.Name, endpointPath, StringComparison.OrdinalIgnoreCase));
     }
 
     private static string NormalizeUrl(string url)
