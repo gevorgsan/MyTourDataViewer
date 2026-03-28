@@ -12,12 +12,6 @@ import { environment } from '../../../environments/environment';
 
 type AuthorizationType = 'None' | 'Bearer' | 'ApiKey' | 'Basic';
 
-interface ApiSettingsAuthorizationFields {
-  tokenUrl?: string;
-  username?: string;
-  password?: string;
-}
-
 interface BackendApiEndpointHeader {
   name: string;
   value: string;
@@ -45,6 +39,9 @@ interface BackendApiSettings {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  authorizationType?: string;
+  tokenUrl?: string;
+  credentialsPayload?: string;
 }
 
 interface BackendApiSettingsUpsertRequest {
@@ -53,6 +50,9 @@ interface BackendApiSettingsUpsertRequest {
   endpoints?: BackendApiEndpoint[];
   timeoutSeconds?: number;
   isActive?: boolean;
+  authorizationType?: string;
+  tokenUrl?: string;
+  credentialsPayload?: string;
 }
 
 @Injectable({
@@ -75,13 +75,13 @@ export class ApiSettingsService {
     );
   }
 
-  create(request: CreateApiSettingsRequest & ApiSettingsAuthorizationFields): Observable<ApiSettings> {
+  create(request: CreateApiSettingsRequest): Observable<ApiSettings> {
     return this.http.post<BackendApiSettings>(this.baseUrl, this.mapToBackend(request)).pipe(
       map(item => this.mapFromBackend(item))
     );
   }
 
-  update(id: number, request: UpdateApiSettingsRequest & ApiSettingsAuthorizationFields): Observable<void> {
+  update(id: number, request: UpdateApiSettingsRequest): Observable<void> {
     return this.http.put<void>(`${this.baseUrl}/${id}`, this.mapToBackend(request));
   }
 
@@ -94,21 +94,16 @@ export class ApiSettingsService {
   }
 
   private mapFromBackend(item: BackendApiSettings): ApiSettings {
-    const endpoints = item.endpoints ?? [];
-    const primaryEndpoint = endpoints.find(endpoint => endpoint.authorizationType === 'Bearer') ?? endpoints[0];
-
     return {
       id: item.id,
       name: item.name,
       baseUrl: item.baseUrl,
       endpointUrls: '[]',
-      authType: 'Bearer',
-      requiresAuthorization: true,
-      authorizationType: 'Bearer',
-      tokenUrl: primaryEndpoint?.tokenEndpointUrl,
-      username: primaryEndpoint?.username,
-      password: undefined,
-      apiKey: undefined,
+      authType: item.authorizationType ?? 'None',
+      requiresAuthorization: item.authorizationType !== 'None',
+      authorizationType: (item.authorizationType as AuthorizationType) ?? 'None',
+      tokenUrl: item.tokenUrl,
+      credentialsEmail: this.parseCredentialsEmail(item.credentialsPayload),
       timeoutSeconds: item.timeoutSeconds,
       isActive: item.isActive,
       createdAt: item.createdAt,
@@ -116,20 +111,45 @@ export class ApiSettingsService {
     };
   }
 
+  private parseCredentialsEmail(payload?: string): string | undefined {
+    if (!payload) return undefined;
+    try {
+      const parsed = JSON.parse(payload);
+      return typeof parsed?.email === 'string' ? parsed.email : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
   private mapToBackend(
-    request: (CreateApiSettingsRequest | UpdateApiSettingsRequest) & ApiSettingsAuthorizationFields
+    request: CreateApiSettingsRequest | UpdateApiSettingsRequest
   ): BackendApiSettingsUpsertRequest {
+    const credentialsPayload = this.buildCredentialsPayload(
+      request.credentialsEmail,
+      request.credentialsPassword
+    );
     return {
       name: request.name,
       baseUrl: request.baseUrl,
       endpoints: this.buildEndpoints(request),
       timeoutSeconds: request.timeoutSeconds,
-      isActive: 'isActive' in request ? request.isActive : undefined
+      isActive: 'isActive' in request ? request.isActive : undefined,
+      authorizationType: request.authorizationType,
+      tokenUrl: request.tokenUrl,
+      credentialsPayload
     };
   }
 
+  private buildCredentialsPayload(email?: string, password?: string): string | undefined {
+    if (!email && !password) return undefined;
+    const payload: Record<string, string> = {};
+    if (email) payload['email'] = email;
+    if (password) payload['password'] = password;
+    return JSON.stringify(payload);
+  }
+
   private buildEndpoints(
-    request: (CreateApiSettingsRequest | UpdateApiSettingsRequest) & ApiSettingsAuthorizationFields
+    request: CreateApiSettingsRequest | UpdateApiSettingsRequest
   ): BackendApiEndpoint[] {
     const endpointUrl = this.resolveEndpointUrl(request);
 
@@ -140,14 +160,14 @@ export class ApiSettingsService {
       requiresAuthorization: true,
       authorizationType: 'Bearer',
       tokenEndpointUrl: request.tokenUrl || undefined,
-      username: request.username || undefined,
-      password: request.password || undefined,
+      username: request.credentialsEmail || undefined,
+      password: request.credentialsPassword || undefined,
       headers: []
     }];
   }
 
   private resolveEndpointUrl(
-    request: (CreateApiSettingsRequest | UpdateApiSettingsRequest) & ApiSettingsAuthorizationFields
+    request: CreateApiSettingsRequest | UpdateApiSettingsRequest
   ): string {
     const tokenUrl = request.tokenUrl?.trim();
     if (tokenUrl) {

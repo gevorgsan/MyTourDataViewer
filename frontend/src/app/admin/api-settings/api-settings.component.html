@@ -78,13 +78,14 @@
     </div>
 
     <div class="form-row">
-      <label>Credentials Payload (JSON)</label>
-      <textarea formControlName="credentialsPayload"
-                rows="4"
-                placeholder='{"email":"user@example.com","password":"secret"}'></textarea>
-      <span class="error" *ngIf="form.get('credentialsPayload')?.errors?.['invalidJson']">
-        Must be valid JSON.
-      </span>
+      <label>Email</label>
+      <input formControlName="credentialsEmail" type="text" placeholder="user@example.com" />
+    </div>
+
+    <div class="form-row">
+      <label>Password</label>
+      <input formControlName="credentialsPassword" type="password"
+             [placeholder]="editingId ? 'Leave blank to keep existing password' : 'Password'" />
     </div>
 
     <div class="form-row">
