@@ -58,6 +58,11 @@ public class ApiSettingsDto
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+
+    // ── Authorization configuration ──────────────────────────────────────
+    public AuthorizationType AuthorizationType { get; set; }
+    public string? TokenUrl { get; set; }
+    public string? CredentialsPayload { get; set; }
 }
 
 public class CreateApiSettingsRequest
@@ -67,6 +72,12 @@ public class CreateApiSettingsRequest
     public string? BaseUrl { get; set; }
     public IList<ApiEndpointUpsertRequest> Endpoints { get; set; } = [];
     [Range(0, 300)] public int TimeoutSeconds { get; set; } = 30;
+
+    // ── Authorization configuration ──────────────────────────────────────
+    public AuthorizationType AuthorizationType { get; set; } = AuthorizationType.None;
+    public string? TokenUrl { get; set; }
+    /// <summary>Raw JSON credentials payload sent to <see cref="TokenUrl"/> to obtain an access token.</summary>
+    public string? CredentialsPayload { get; set; }
 }
 
 public class UpdateApiSettingsRequest
@@ -77,6 +88,12 @@ public class UpdateApiSettingsRequest
     public IList<ApiEndpointUpsertRequest>? Endpoints { get; set; }
     [Range(0, 300)] public int? TimeoutSeconds { get; set; }
     public bool? IsActive { get; set; }
+
+    // ── Authorization configuration ──────────────────────────────────────
+    public AuthorizationType? AuthorizationType { get; set; }
+    public string? TokenUrl { get; set; }
+    /// <summary>Raw JSON credentials payload sent to TokenUrl to obtain an access token.</summary>
+    public string? CredentialsPayload { get; set; }
 }
 
 public class TestConnectionRequest

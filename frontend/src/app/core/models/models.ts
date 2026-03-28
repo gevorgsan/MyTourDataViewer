@@ -44,8 +44,9 @@ export interface ApiSettings {
   endpointUrls: string;
   authType: string;
   requiresAuthorization?: boolean;
-  authorizationType?: 'None' | 'Bearer' | 'ApiKey' | 'Basic';
+  authorizationType: 'None' | 'Bearer' | 'ApiKey' | 'Basic';
   tokenUrl?: string;
+  credentialsPayload?: string;
   username?: string;
   password?: string;
   apiKey?: string;
@@ -59,6 +60,9 @@ export interface CreateApiSettingsRequest {
   name: string;
   baseUrl?: string;
   endpointUrls?: string;
+  authorizationType?: 'None' | 'Bearer' | 'ApiKey' | 'Basic';
+  tokenUrl?: string;
+  credentialsPayload?: string;
   username?: string;
   password?: string;
   apiKey?: string;
@@ -69,6 +73,9 @@ export interface UpdateApiSettingsRequest {
   name?: string;
   baseUrl?: string;
   endpointUrls?: string;
+  authorizationType?: 'None' | 'Bearer' | 'ApiKey' | 'Basic';
+  tokenUrl?: string;
+  credentialsPayload?: string;
   username?: string;
   password?: string;
   apiKey?: string;

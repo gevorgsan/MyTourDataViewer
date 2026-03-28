@@ -13,7 +13,7 @@ public class ApiSettings
     /// <summary>Deprecated: Endpoints are stored as separate <see cref="ApiEndpointSettings"/> records. This field is no longer populated.</summary>
     public string EndpointUrls { get; set; } = "[]";
 
-    /// <summary>None | ApiKey | Basic | Bearer</summary>
+    /// <summary>Deprecated: None | ApiKey | Basic | Bearer</summary>
     public string AuthType { get; set; } = "None";
 
     public string? Username { get; set; }
@@ -27,4 +27,16 @@ public class ApiSettings
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    // ── Authorization configuration ────────────────────────────────────────────
+
+    /// <summary>External service authorization type (e.g. Bearer token request).</summary>
+    public AuthorizationType AuthorizationType { get; set; } = AuthorizationType.None;
+
+    /// <summary>URL of the external service token endpoint.</summary>
+    public string? TokenUrl { get; set; }
+
+    /// <summary>Raw JSON credentials payload sent to <see cref="TokenUrl"/> when requesting an access token.
+    /// Example: {"email":"user@example.com","password":"secret"}</summary>
+    public string? CredentialsPayload { get; set; }
 }

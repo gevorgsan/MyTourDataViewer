@@ -49,7 +49,10 @@ public class ApiSettingsService : IApiSettingsService
             TimeoutSeconds = request.TimeoutSeconds,
             IsActive       = true,
             CreatedAt      = DateTime.UtcNow,
-            UpdatedAt      = DateTime.UtcNow
+            UpdatedAt      = DateTime.UtcNow,
+            AuthorizationType  = request.AuthorizationType,
+            TokenUrl           = request.TokenUrl,
+            CredentialsPayload = request.CredentialsPayload
         };
 
         _db.ApiSettings.Add(entry);
@@ -71,6 +74,9 @@ public class ApiSettingsService : IApiSettingsService
         if (request.BaseUrl       != null)  entry.BaseUrl       = request.BaseUrl;
         if (request.TimeoutSeconds.HasValue) entry.TimeoutSeconds = request.TimeoutSeconds.Value;
         if (request.IsActive.HasValue)      entry.IsActive      = request.IsActive.Value;
+        if (request.AuthorizationType.HasValue) entry.AuthorizationType = request.AuthorizationType.Value;
+        if (request.TokenUrl          != null)  entry.TokenUrl          = request.TokenUrl;
+        if (request.CredentialsPayload != null)  entry.CredentialsPayload = request.CredentialsPayload;
 
         if (request.Endpoints != null)
         {
@@ -104,7 +110,10 @@ public class ApiSettingsService : IApiSettingsService
         TimeoutSeconds = e.TimeoutSeconds,
         IsActive       = e.IsActive,
         CreatedAt      = e.CreatedAt,
-        UpdatedAt      = e.UpdatedAt
+        UpdatedAt      = e.UpdatedAt,
+        AuthorizationType  = e.AuthorizationType,
+        TokenUrl           = e.TokenUrl,
+        CredentialsPayload = e.CredentialsPayload
     };
 
     private static ApiEndpointSettings MapEndpoint(ApiEndpointUpsertRequest request) => new()

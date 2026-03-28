@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { ApiSettings, CreateApiSettingsRequest, TestConnectionResponse } from '../../core/models/models';
 import { ApiSettingsService } from '../../core/services/api-settings.service';
 
@@ -32,14 +32,24 @@ export class ApiSettingsComponent implements OnInit {
 
   private buildForm(): void {
     this.form = this.fb.group({
-      name:           ['', Validators.required],
-      baseUrl:        [''],
-      tokenUrl:       [''],
-      username:       [''],
-      password:       [''],
-      timeoutSeconds: [30, [Validators.required, Validators.min(0), Validators.max(300)]],
-      isActive:       [true]
+      name:               ['', Validators.required],
+      tokenUrl:           [''],
+      authorizationType:  ['None'],
+      credentialsPayload: ['', this.jsonValidator],
+      timeoutSeconds:     [30, [Validators.required, Validators.min(0), Validators.max(300)]],
+      isActive:           [true]
     });
+  }
+
+  private jsonValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value as string;
+    if (!value || !value.trim()) return null;
+    try {
+      JSON.parse(value);
+      return null;
+    } catch {
+      return { invalidJson: true };
+    }
   }
 
   private load(): void {
@@ -63,13 +73,12 @@ export class ApiSettingsComponent implements OnInit {
   openEdit(item: ApiSettings): void {
     this.editingId = item.id;
     this.form.patchValue({
-      name:           item.name,
-      baseUrl:        item.baseUrl,
-      tokenUrl:       item.tokenUrl ?? '',
-      username:       item.username ?? '',
-      password:       '',
-      timeoutSeconds: item.timeoutSeconds,
-      isActive:       item.isActive
+      name:               item.name,
+      tokenUrl:           item.tokenUrl ?? '',
+      authorizationType:  item.authorizationType ?? 'None',
+      credentialsPayload: item.credentialsPayload ?? '',
+      timeoutSeconds:     item.timeoutSeconds,
+      isActive:           item.isActive
     });
     this.showForm = true;
     this.testResult = null;
@@ -91,11 +100,11 @@ export class ApiSettingsComponent implements OnInit {
 
     if (this.editingId == null) {
       const req = {
-        name: v.name, baseUrl: v.baseUrl,
-        username: v.username || undefined,
-        password: v.password || undefined,
-        timeoutSeconds: v.timeoutSeconds,
-        tokenUrl: v.tokenUrl || undefined
+        name:               v.name,
+        tokenUrl:           v.tokenUrl || undefined,
+        authorizationType:  v.authorizationType || undefined,
+        credentialsPayload: v.credentialsPayload || undefined,
+        timeoutSeconds:     v.timeoutSeconds
       };
       this.svc.create(req as CreateApiSettingsRequest).subscribe({
         next: () => { this.saving = false; this.showForm = false; this.load(); },
@@ -103,12 +112,12 @@ export class ApiSettingsComponent implements OnInit {
       });
     } else {
       const req = {
-        name: v.name, baseUrl: v.baseUrl,
-        username: v.username || undefined,
-        password: v.password || undefined,
-        timeoutSeconds: v.timeoutSeconds,
-        isActive: v.isActive,
-        tokenUrl: v.tokenUrl || undefined
+        name:               v.name,
+        tokenUrl:           v.tokenUrl || undefined,
+        authorizationType:  v.authorizationType || undefined,
+        credentialsPayload: v.credentialsPayload || undefined,
+        timeoutSeconds:     v.timeoutSeconds,
+        isActive:           v.isActive
       };
       this.svc.update(this.editingId, req).subscribe({
         next: () => { this.saving = false; this.showForm = false; this.load(); },
