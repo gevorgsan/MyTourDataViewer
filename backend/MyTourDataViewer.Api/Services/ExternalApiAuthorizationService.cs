@@ -11,6 +11,7 @@ namespace MyTourDataViewer.Api.Services;
 public class ExternalApiAuthorizationService : IExternalApiAuthorizationService
 {
     private static readonly TimeSpan ExpirationSafetyWindow = TimeSpan.FromSeconds(30);
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IMemoryCache _cache;
@@ -133,7 +134,17 @@ public class ExternalApiAuthorizationService : IExternalApiAuthorizationService
                     $"Token request failed with status code {(int)response.StatusCode}.");
             }
 
-            var tokenResponse = JsonSerializer.Deserialize<ExternalApiTokenResponse>(responseBody);
+            if (!TryDeserializeTokenResponse(responseBody, out var tokenResponse, out var parseError))
+            {
+                _logger.LogWarning(
+                    "Token response for API settings {ApiSettingsId} could not be parsed. Error: {Error}. Response: {ResponseBody}",
+                    apiSettings.Id,
+                    parseError,
+                    Truncate(responseBody));
+
+                return ExternalApiAuthorizationResult.Failed(parseError);
+            }
+
             var token = tokenResponse?.AccessToken ?? tokenResponse?.Token;
 
             if (string.IsNullOrWhiteSpace(token))
@@ -266,7 +277,17 @@ public class ExternalApiAuthorizationService : IExternalApiAuthorizationService
                     $"Token request failed with status code {(int)response.StatusCode}.");
             }
 
-            var tokenResponse = JsonSerializer.Deserialize<ExternalApiTokenResponse>(responseBody);
+            if (!TryDeserializeTokenResponse(responseBody, out var tokenResponse, out var parseError))
+            {
+                _logger.LogWarning(
+                    "Token response for endpoint {EndpointName} could not be parsed. Error: {Error}. Response: {ResponseBody}",
+                    endpoint.Name,
+                    parseError,
+                    Truncate(responseBody));
+
+                return ExternalApiAuthorizationResult.Failed(parseError);
+            }
+
             var token = tokenResponse?.AccessToken ?? tokenResponse?.Token;
 
             if (string.IsNullOrWhiteSpace(token))
@@ -317,6 +338,71 @@ public class ExternalApiAuthorizationService : IExternalApiAuthorizationService
         }
 
         return $"{baseUrl.TrimEnd('/')}/{tokenEndpointUrl.TrimStart('/')}";
+    }
+
+    private static bool TryDeserializeTokenResponse(
+        string responseBody,
+        out ExternalApiTokenResponse? tokenResponse,
+        out string error)
+    {
+        tokenResponse = null;
+
+        if (string.IsNullOrWhiteSpace(responseBody))
+        {
+            error = "Token endpoint returned an empty response.";
+            return false;
+        }
+
+        var trimmed = responseBody.AsSpan().TrimStart();
+        if (trimmed.IsEmpty)
+        {
+            error = "Token endpoint returned non-JSON response.";
+            return false;
+        }
+
+        // Some providers return a raw JWT string instead of a JSON object.
+        if (trimmed[0] != '{' && trimmed[0] != '[')
+        {
+            var rawToken = responseBody.Trim();
+            if (LooksLikeJwt(rawToken))
+            {
+                tokenResponse = new ExternalApiTokenResponse { AccessToken = rawToken };
+                error = string.Empty;
+                return true;
+            }
+
+            error = "Token endpoint returned non-JSON response.";
+            return false;
+        }
+
+        try
+        {
+            tokenResponse = JsonSerializer.Deserialize<ExternalApiTokenResponse>(responseBody, JsonOptions);
+            if (tokenResponse == null)
+            {
+                error = "Token endpoint returned an empty JSON response.";
+                return false;
+            }
+
+            error = string.Empty;
+            return true;
+        }
+        catch (JsonException)
+        {
+            error = "Token endpoint returned invalid JSON response.";
+            return false;
+        }
+    }
+
+    private static bool LooksLikeJwt(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Contains(' '))
+        {
+            return false;
+        }
+
+        var parts = value.Split('.');
+        return parts.Length == 3 && parts.All(static part => part.Length > 0);
     }
 
     private static string Truncate(string value)

@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using MyTourDataViewer.Api.Data;
+using MyTourDataViewer.Api.Entities;
 using MyTourDataViewer.Api.Models;
 
 namespace MyTourDataViewer.Api.Services;
@@ -13,7 +14,7 @@ namespace MyTourDataViewer.Api.Services;
 /// </summary>
 public class SearchRequestService : ISearchRequestService
 {
-    private const string SearchRequestUrl = "https://api.test.mytour.am/api/Request/SearchRequest";
+    private const string DefaultSearchRequestUrl = "https://api.mytour.am/api/Request/SearchRequest";
 
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IExternalApiAuthorizationService _authService;
@@ -40,6 +41,7 @@ public class SearchRequestService : ISearchRequestService
     {
         var settings = await _db.ApiSettings
             .AsNoTracking()
+            .Include(a => a.Endpoints)
             .FirstOrDefaultAsync(a => a.Id == apiSettingsId, cancellationToken);
 
         if (settings == null)
@@ -59,12 +61,14 @@ public class SearchRequestService : ISearchRequestService
                 authResult.ErrorMessage ?? "Failed to retrieve bearer token.");
         }
 
+        var searchRequestUrl = ResolveSearchRequestUrl(settings);
+
         using var client = _httpClientFactory.CreateClient();
         client.Timeout = settings.TimeoutSeconds > 0
             ? TimeSpan.FromSeconds(settings.TimeoutSeconds)
             : TimeSpan.FromSeconds(30);
 
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, SearchRequestUrl)
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, searchRequestUrl)
         {
             Content = JsonContent.Create(request)
         };
@@ -72,7 +76,7 @@ public class SearchRequestService : ISearchRequestService
 
         _logger.LogInformation(
             "Sending SearchRequest to {Url} using API settings {ApiSettingsId}.",
-            SearchRequestUrl,
+            searchRequestUrl,
             apiSettingsId);
 
         using var response = await client.SendAsync(httpRequest, cancellationToken);
@@ -88,13 +92,45 @@ public class SearchRequestService : ISearchRequestService
                 $"External API returned status code {(int)response.StatusCode}.");
         }
 
-        var items = JsonSerializer.Deserialize<IList<SearchRequestItem>>(responseBody,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        IList<SearchRequestItem>? items;
+        try
+        {
+            items = JsonSerializer.Deserialize<IList<SearchRequestItem>>(responseBody,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "SearchRequest returned invalid JSON. Response: {ResponseBody}",
+                responseBody.Length > 500 ? responseBody[..500] + "..." : responseBody);
+            throw new HttpRequestException("External API returned invalid JSON response.");
+        }
 
         _logger.LogInformation(
             "SearchRequest succeeded. Returned {Count} item(s).",
             items?.Count ?? 0);
 
         return items ?? [];
+    }
+
+    private static string ResolveSearchRequestUrl(ApiSettings settings)
+    {
+        var namedEndpoint = settings.Endpoints
+            .FirstOrDefault(e =>
+                !string.IsNullOrWhiteSpace(e.Url) &&
+                e.Name.Contains("searchrequest", StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(namedEndpoint?.Url))
+        {
+            return namedEndpoint.Url;
+        }
+
+        var firstUrl = settings.Endpoints
+            .FirstOrDefault(e => !string.IsNullOrWhiteSpace(e.Url))?.Url;
+
+        return !string.IsNullOrWhiteSpace(firstUrl)
+            ? firstUrl
+            : DefaultSearchRequestUrl;
     }
 }

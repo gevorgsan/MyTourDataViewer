@@ -78,9 +78,34 @@ export class SearchRequestComponent implements OnInit {
       },
       error: err => {
         this.searchState = 'error';
-        this.errorMessage = err?.error?.message ?? 'Failed to retrieve search results.';
+        this.errorMessage = this.extractErrorMessage(err);
       }
     });
+  }
+
+  private extractErrorMessage(err: any): string {
+    const fallback = 'Failed to retrieve search results.';
+
+    if (typeof err?.error?.message === 'string' && err.error.message.trim()) {
+      return err.error.message;
+    }
+
+    if (typeof err?.error === 'string' && err.error.trim()) {
+      try {
+        const parsed = JSON.parse(err.error);
+        if (typeof parsed?.message === 'string' && parsed.message.trim()) {
+          return parsed.message;
+        }
+      } catch {
+        return err.error;
+      }
+    }
+
+    if (typeof err?.message === 'string' && err.message.trim()) {
+      return err.message;
+    }
+
+    return fallback;
   }
 
   isInvalid(field: string): boolean {

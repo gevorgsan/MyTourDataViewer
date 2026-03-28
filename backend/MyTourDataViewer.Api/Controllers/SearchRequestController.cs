@@ -6,7 +6,7 @@ using MyTourDataViewer.Api.Services;
 namespace MyTourDataViewer.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/searchrequest")]
 [Authorize]
 public class SearchRequestController : ControllerBase
 {
