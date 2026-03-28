@@ -23,7 +23,7 @@ interface BackendApiEndpoint {
   url: string;
   httpMethod: string;
   requiresAuthorization: boolean;
-  authorizationType: AuthorizationType;
+  authorizationType: number;
   tokenEndpointUrl?: string;
   username?: string;
   password?: string;
@@ -39,7 +39,7 @@ interface BackendApiSettings {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  authorizationType?: string;
+  authorizationType?: number | string;
   tokenUrl?: string;
   credentialsPayload?: string;
 }
@@ -50,7 +50,7 @@ interface BackendApiSettingsUpsertRequest {
   endpoints?: BackendApiEndpoint[];
   timeoutSeconds?: number;
   isActive?: boolean;
-  authorizationType?: string;
+  authorizationType?: number;
   tokenUrl?: string;
   credentialsPayload?: string;
 }
@@ -94,14 +94,16 @@ export class ApiSettingsService {
   }
 
   private mapFromBackend(item: BackendApiSettings): ApiSettings {
+    const authorizationType = this.fromAuthorizationTypeValue(item.authorizationType);
+
     return {
       id: item.id,
       name: item.name,
       baseUrl: item.baseUrl,
       endpointUrls: '[]',
-      authType: item.authorizationType ?? 'None',
-      requiresAuthorization: item.authorizationType !== 'None',
-      authorizationType: (item.authorizationType as AuthorizationType) ?? 'None',
+      authType: authorizationType,
+      requiresAuthorization: authorizationType !== 'None',
+      authorizationType,
       tokenUrl: item.tokenUrl,
       credentialsEmail: this.parseCredentialsEmail(item.credentialsPayload),
       timeoutSeconds: item.timeoutSeconds,
@@ -124,17 +126,20 @@ export class ApiSettingsService {
   private mapToBackend(
     request: CreateApiSettingsRequest | UpdateApiSettingsRequest
   ): BackendApiSettingsUpsertRequest {
+    const authorizationType = this.toAuthorizationTypeValue(request.authorizationType ?? 'None');
+
     const credentialsPayload = this.buildCredentialsPayload(
       request.credentialsEmail,
       request.credentialsPassword
     );
+
     return {
       name: request.name,
       baseUrl: request.baseUrl,
-      endpoints: this.buildEndpoints(request),
+      endpoints: this.buildEndpoints(request, authorizationType),
       timeoutSeconds: request.timeoutSeconds,
       isActive: 'isActive' in request ? request.isActive : undefined,
-      authorizationType: request.authorizationType,
+      authorizationType,
       tokenUrl: request.tokenUrl,
       credentialsPayload
     };
@@ -149,7 +154,8 @@ export class ApiSettingsService {
   }
 
   private buildEndpoints(
-    request: CreateApiSettingsRequest | UpdateApiSettingsRequest
+    request: CreateApiSettingsRequest | UpdateApiSettingsRequest,
+    authorizationType: number
   ): BackendApiEndpoint[] {
     const endpointUrl = this.resolveEndpointUrl(request);
 
@@ -157,13 +163,46 @@ export class ApiSettingsService {
       name: this.buildEndpointName(request.name, endpointUrl),
       url: endpointUrl,
       httpMethod: 'GET',
-      requiresAuthorization: true,
-      authorizationType: 'Bearer',
+      requiresAuthorization: authorizationType !== 0,
+      authorizationType,
       tokenEndpointUrl: request.tokenUrl || undefined,
       username: request.credentialsEmail || undefined,
       password: request.credentialsPassword || undefined,
       headers: []
     }];
+  }
+
+  private toAuthorizationTypeValue(type: AuthorizationType): number {
+    switch (type) {
+      case 'Bearer':
+        return 1;
+      case 'ApiKey':
+        return 2;
+      case 'Basic':
+        return 3;
+      default:
+        return 0;
+    }
+  }
+
+  private fromAuthorizationTypeValue(value: number | string | undefined): AuthorizationType {
+    if (typeof value === 'string') {
+      if (value === 'Bearer' || value === 'ApiKey' || value === 'Basic' || value === 'None') {
+        return value;
+      }
+      return 'None';
+    }
+
+    switch (value) {
+      case 1:
+        return 'Bearer';
+      case 2:
+        return 'ApiKey';
+      case 3:
+        return 'Basic';
+      default:
+        return 'None';
+    }
   }
 
   private resolveEndpointUrl(
