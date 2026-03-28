@@ -19,6 +19,8 @@ interface ApiSettingsAuthorizationFields {
   username?: string;
   password?: string;
   apiKey?: string;
+  clientId?: string;
+  clientSecret?: string;
 }
 
 interface BackendApiEndpointHeader {
@@ -36,6 +38,8 @@ interface BackendApiEndpoint {
   tokenEndpointUrl?: string;
   username?: string;
   password?: string;
+  clientId?: string;
+  clientSecret?: string;
   headers?: BackendApiEndpointHeader[];
 }
 
@@ -116,6 +120,7 @@ export class ApiSettingsService {
       username: primaryEndpoint?.username,
       password: undefined,
       apiKey: apiKeyHeader?.value,
+      clientId: primaryEndpoint?.clientId,
       timeoutSeconds: item.timeoutSeconds,
       isActive: item.isActive,
       createdAt: item.createdAt,
@@ -141,7 +146,7 @@ export class ApiSettingsService {
     const urls = this.parseEndpointUrls(request.endpointUrls);
     const requiresAuthorization = request.requiresAuthorization ?? false;
     const authorizationType = requiresAuthorization
-      ? request.authorizationType ?? this.normalizeAuthType(request.authType)
+      ? request.authorizationType ?? 'None'
       : 'None';
 
     return urls.map((url, index) => ({
@@ -157,6 +162,8 @@ export class ApiSettingsService {
       password: authorizationType === 'Bearer' || authorizationType === 'Basic'
         ? request.password || undefined
         : undefined,
+      clientId: authorizationType === 'Bearer' ? request.clientId || undefined : undefined,
+      clientSecret: authorizationType === 'Bearer' ? request.clientSecret || undefined : undefined,
       headers: authorizationType === 'ApiKey' && request.apiKey
         ? [{ name: 'X-Api-Key', value: request.apiKey }]
         : []
@@ -184,17 +191,6 @@ export class ApiSettingsService {
     }
 
     return [];
-  }
-
-  private normalizeAuthType(authType?: string): AuthorizationType {
-    switch (authType) {
-      case 'Bearer':
-      case 'ApiKey':
-      case 'Basic':
-        return authType;
-      default:
-        return 'None';
-    }
   }
 
   private buildEndpointName(url: string, index: number): string {

@@ -49,6 +49,7 @@ export interface ApiSettings {
   username?: string;
   password?: string;
   apiKey?: string;
+  clientId?: string;
   timeoutSeconds: number;
   isActive: boolean;
   createdAt: string;
@@ -57,13 +58,13 @@ export interface ApiSettings {
 
 export interface CreateApiSettingsRequest {
   name: string;
-  baseUrl: string;
+  baseUrl?: string;
   endpointUrls?: string;
-  authType: string;
   username?: string;
   password?: string;
   apiKey?: string;
-  bearerToken?: string;
+  clientId?: string;
+  clientSecret?: string;
   timeoutSeconds?: number;
 }
 
@@ -71,11 +72,11 @@ export interface UpdateApiSettingsRequest {
   name?: string;
   baseUrl?: string;
   endpointUrls?: string;
-  authType?: string;
   username?: string;
   password?: string;
   apiKey?: string;
-  bearerToken?: string;
+  clientId?: string;
+  clientSecret?: string;
   timeoutSeconds?: number;
   isActive?: boolean;
 }

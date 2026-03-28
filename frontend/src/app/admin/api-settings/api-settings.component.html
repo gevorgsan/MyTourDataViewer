@@ -61,7 +61,7 @@
     </div>
 
     <div class="form-row">
-      <label>Base URL *</label>
+      <label>Base URL</label>
       <input formControlName="baseUrl" type="url" placeholder="https://api.example.com" />
     </div>
 
@@ -98,6 +98,14 @@
           <div class="form-row">
             <label>Password</label>
             <input formControlName="password" type="password" placeholder="Leave blank to keep current" />
+          </div>
+          <div class="form-row">
+            <label>Client ID</label>
+            <input formControlName="clientId" type="text" placeholder="my-client-id" />
+          </div>
+          <div class="form-row">
+            <label>Client Secret</label>
+            <input formControlName="clientSecret" type="password" placeholder="Leave blank to keep current" />
           </div>
         </ng-container>
 
