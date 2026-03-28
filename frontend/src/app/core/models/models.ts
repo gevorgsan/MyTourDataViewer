@@ -90,6 +90,25 @@ export interface AvailableApi {
   endpointUrls: string;
 }
 
+export interface SearchRequestRequest {
+  createdFrom: string;
+  createdTo: string;
+  requestChanels?: number | null;
+  requestStatus?: number | null;
+}
+
+export interface SearchRequestItem {
+  id: number;
+  offerId?: number;
+  price?: number;
+  startDate?: string;
+  endDate?: string;
+  travelers?: unknown[];
+  status?: number;
+  currency?: string;
+  createdDate?: string;
+}
+
 export interface TestConnectionRequest {
   apiSettingsId: number;
   endpointPath?: string;
