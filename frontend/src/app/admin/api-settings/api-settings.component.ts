@@ -20,7 +20,6 @@ export class ApiSettingsComponent implements OnInit {
   testResult: TestConnectionResponse | null = null;
   testingId: number | null = null;
 
-  readonly authTypes = ['None', 'ApiKey', 'Basic', 'Bearer'];
   readonly authorizationTypes = ['None', 'Bearer', 'ApiKey', 'Basic'] as const;
 
   constructor(
@@ -36,16 +35,16 @@ export class ApiSettingsComponent implements OnInit {
   private buildForm(): void {
     this.form = this.fb.group({
       name:           ['', Validators.required],
-      baseUrl:        ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
+      baseUrl:        [''],
       endpointUrls:   ['[]'],
       requiresAuthorization: [false],
       authorizationType: ['None', Validators.required],
       tokenUrl:       [''],
-      authType:       ['None', Validators.required],
       username:       [''],
       password:       [''],
       apiKey:         [''],
-      bearerToken:    [''],
+      clientId:       [''],
+      clientSecret:   [''],
       timeoutSeconds: [30, [Validators.required, Validators.min(0), Validators.max(300)]],
       isActive:       [true]
     });
@@ -54,24 +53,19 @@ export class ApiSettingsComponent implements OnInit {
       if (!requiresAuthorization) {
         this.form.patchValue({
           authorizationType: 'None',
-          authType: 'None',
           tokenUrl: '',
           username: '',
           password: '',
           apiKey: '',
-          bearerToken: ''
+          clientId: '',
+          clientSecret: ''
         }, { emitEvent: false });
       }
 
       this.updateAuthorizationControls();
     });
 
-    this.form.get('authorizationType')?.valueChanges.subscribe(authorizationType => {
-      const authType = this.form.get('requiresAuthorization')?.value
-        ? authorizationType ?? 'None'
-        : 'None';
-
-      this.form.patchValue({ authType }, { emitEvent: false });
+    this.form.get('authorizationType')?.valueChanges.subscribe(() => {
       this.updateAuthorizationControls();
     });
 
@@ -87,6 +81,8 @@ export class ApiSettingsComponent implements OnInit {
     this.toggleControl('username', requiresAuthorization && (authorizationType === 'Bearer' || authorizationType === 'Basic'));
     this.toggleControl('password', requiresAuthorization && (authorizationType === 'Bearer' || authorizationType === 'Basic'));
     this.toggleControl('apiKey', requiresAuthorization && authorizationType === 'ApiKey');
+    this.toggleControl('clientId', requiresAuthorization && authorizationType === 'Bearer');
+    this.toggleControl('clientSecret', requiresAuthorization && authorizationType === 'Bearer');
   }
 
   private toggleControl(controlName: string, enabled: boolean): void {
@@ -116,7 +112,6 @@ export class ApiSettingsComponent implements OnInit {
       endpointUrls: '[]',
       requiresAuthorization: false,
       authorizationType: 'None',
-      authType: 'None',
       timeoutSeconds: 30,
       isActive: true
     });
@@ -135,11 +130,11 @@ export class ApiSettingsComponent implements OnInit {
       requiresAuthorization: item.requiresAuthorization ?? ((item.authorizationType ?? item.authType ?? 'None') !== 'None'),
       authorizationType: item.authorizationType ?? item.authType ?? 'None',
       tokenUrl:       item.tokenUrl ?? '',
-      authType:       item.authType,
       username:       item.username ?? '',
       password:       '',
       apiKey:         item.apiKey ?? '',
-      bearerToken:    '',
+      clientId:       item.clientId ?? '',
+      clientSecret:   '',
       timeoutSeconds: item.timeoutSeconds,
       isActive:       item.isActive
     });
@@ -165,9 +160,10 @@ export class ApiSettingsComponent implements OnInit {
     if (this.editingId == null) {
       const req = {
         name: v.name, baseUrl: v.baseUrl, endpointUrls: v.endpointUrls,
-        authType: v.authType, username: v.username || undefined,
+        username: v.username || undefined,
         password: v.password || undefined, apiKey: v.apiKey || undefined,
-        bearerToken: v.bearerToken || undefined, timeoutSeconds: v.timeoutSeconds,
+        clientId: v.clientId || undefined, clientSecret: v.clientSecret || undefined,
+        timeoutSeconds: v.timeoutSeconds,
         requiresAuthorization: v.requiresAuthorization,
         authorizationType: v.authorizationType,
         tokenUrl: v.tokenUrl || undefined
@@ -179,9 +175,10 @@ export class ApiSettingsComponent implements OnInit {
     } else {
       const req = {
         name: v.name, baseUrl: v.baseUrl, endpointUrls: v.endpointUrls,
-        authType: v.authType, username: v.username || undefined,
+        username: v.username || undefined,
         password: v.password || undefined, apiKey: v.apiKey || undefined,
-        bearerToken: v.bearerToken || undefined, timeoutSeconds: v.timeoutSeconds,
+        clientId: v.clientId || undefined, clientSecret: v.clientSecret || undefined,
+        timeoutSeconds: v.timeoutSeconds,
         isActive: v.isActive,
         requiresAuthorization: v.requiresAuthorization,
         authorizationType: v.authorizationType,
