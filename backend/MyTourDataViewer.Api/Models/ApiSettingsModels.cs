@@ -51,6 +51,7 @@ public class ApiSettingsDto
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
+    /// <summary>Deprecated: Use endpoint-level Url on each entry in <see cref="Endpoints"/> instead.</summary>
     public string BaseUrl { get; set; } = string.Empty;
     public IList<ApiEndpointDto> Endpoints { get; set; } = [];
     public int TimeoutSeconds { get; set; }
@@ -62,7 +63,8 @@ public class ApiSettingsDto
 public class CreateApiSettingsRequest
 {
     [Required] public string Name { get; set; } = string.Empty;
-    [Required, Url] public string BaseUrl { get; set; } = string.Empty;
+    /// <summary>Deprecated: Each endpoint now stores its own full URL. Ignored by the server.</summary>
+    public string? BaseUrl { get; set; }
     public IList<ApiEndpointUpsertRequest> Endpoints { get; set; } = [];
     [Range(0, 300)] public int TimeoutSeconds { get; set; } = 30;
 }
@@ -70,6 +72,7 @@ public class CreateApiSettingsRequest
 public class UpdateApiSettingsRequest
 {
     public string? Name { get; set; }
+    /// <summary>Deprecated: Each endpoint now stores its own full URL. Ignored by the server.</summary>
     public string? BaseUrl { get; set; }
     public IList<ApiEndpointUpsertRequest>? Endpoints { get; set; }
     [Range(0, 300)] public int? TimeoutSeconds { get; set; }
