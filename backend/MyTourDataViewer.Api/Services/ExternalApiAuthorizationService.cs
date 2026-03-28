@@ -26,6 +26,134 @@ public class ExternalApiAuthorizationService : IExternalApiAuthorizationService
         _logger = logger;
     }
 
+    /// <inheritdoc />
+    public async Task<ExternalApiAuthorizationResult> GetBearerTokenAsync(
+        ApiSettings apiSettings,
+        CancellationToken cancellationToken = default)
+    {
+        if (apiSettings.AuthorizationType != AuthorizationType.Bearer)
+        {
+            _logger.LogWarning(
+                "Authorization type {AuthorizationType} is not supported by {ServiceName} for settings {ApiSettingsId}.",
+                apiSettings.AuthorizationType,
+                nameof(ExternalApiAuthorizationService),
+                apiSettings.Id);
+
+            return ExternalApiAuthorizationResult.Failed(
+                $"Authorization type '{apiSettings.AuthorizationType}' is not supported.");
+        }
+
+        if (string.IsNullOrWhiteSpace(apiSettings.TokenUrl))
+        {
+            _logger.LogWarning("Token URL is missing for API settings {ApiSettingsId}.", apiSettings.Id);
+            return ExternalApiAuthorizationResult.Failed("Token URL is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(apiSettings.CredentialsPayload))
+        {
+            _logger.LogWarning("Credentials payload is missing for API settings {ApiSettingsId}.", apiSettings.Id);
+            return ExternalApiAuthorizationResult.Failed("Credentials payload is required.");
+        }
+
+        var cacheKey = $"external-api-token:{apiSettings.Id}";
+        if (_cache.TryGetValue<ExternalApiTokenCacheEntry>(cacheKey, out var cachedEntry))
+        {
+            if (cachedEntry != null && (!cachedEntry.ExpiresAt.HasValue || cachedEntry.ExpiresAt.Value > DateTimeOffset.UtcNow))
+            {
+                _logger.LogInformation(
+                    "Using cached bearer token for API settings {ApiSettingsId}.",
+                    apiSettings.Id);
+
+                return ExternalApiAuthorizationResult.Succeeded(
+                    cachedEntry.Token,
+                    new ExternalApiTokenResponse
+                    {
+                        AccessToken = cachedEntry.Token,
+                        ExpiresIn = cachedEntry.ExpiresAt.HasValue
+                            ? (int)Math.Max(0, (cachedEntry.ExpiresAt.Value - DateTimeOffset.UtcNow).TotalSeconds)
+                            : null
+                    });
+            }
+
+            if (cachedEntry != null)
+            {
+                _logger.LogInformation(
+                    "Cached bearer token expired for API settings {ApiSettingsId}. Requesting a new token.",
+                    apiSettings.Id);
+                _cache.Remove(cacheKey);
+            }
+        }
+
+        JsonElement credentialsElement;
+        try
+        {
+            credentialsElement = JsonSerializer.Deserialize<JsonElement>(apiSettings.CredentialsPayload);
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogWarning(ex, "Invalid credentials payload JSON for API settings {ApiSettingsId}.", apiSettings.Id);
+            return ExternalApiAuthorizationResult.Failed("Credentials payload contains invalid JSON.");
+        }
+
+        try
+        {
+            using var client = _httpClientFactory.CreateClient();
+            client.Timeout = apiSettings.TimeoutSeconds > 0
+                ? TimeSpan.FromSeconds(apiSettings.TimeoutSeconds)
+                : TimeSpan.FromSeconds(30);
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, apiSettings.TokenUrl)
+            {
+                Content = JsonContent.Create(credentialsElement)
+            };
+
+            _logger.LogInformation(
+                "Requesting bearer token for API settings {ApiSettingsId} from {TokenUrl}.",
+                apiSettings.Id,
+                apiSettings.TokenUrl);
+
+            using var response = await client.SendAsync(request, cancellationToken);
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Token request failed for API settings {ApiSettingsId}. StatusCode: {StatusCode}, Response: {ResponseBody}",
+                    apiSettings.Id,
+                    (int)response.StatusCode,
+                    Truncate(responseBody));
+
+                return ExternalApiAuthorizationResult.Failed(
+                    $"Token request failed with status code {(int)response.StatusCode}.");
+            }
+
+            var tokenResponse = JsonSerializer.Deserialize<ExternalApiTokenResponse>(responseBody);
+            var token = tokenResponse?.AccessToken ?? tokenResponse?.Token;
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                _logger.LogWarning(
+                    "Token response for API settings {ApiSettingsId} did not contain an access token. Response: {ResponseBody}",
+                    apiSettings.Id,
+                    Truncate(responseBody));
+
+                return ExternalApiAuthorizationResult.Failed("Token response did not contain an access token.");
+            }
+
+            var expiresAt = ResolveExpiration(tokenResponse, token);
+            CacheToken(cacheKey, token, expiresAt, apiSettings.Id, apiSettings.Name);
+
+            _logger.LogInformation("Successfully retrieved bearer token for API settings {ApiSettingsId}.", apiSettings.Id);
+            return ExternalApiAuthorizationResult.Succeeded(token, tokenResponse!);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve bearer token for API settings {ApiSettingsId}.", apiSettings.Id);
+            return ExternalApiAuthorizationResult.Failed(ex.Message);
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<ExternalApiAuthorizationResult> GetBearerTokenAsync(
         ApiSettings apiSettings,
         ApiEndpointSettings endpoint,

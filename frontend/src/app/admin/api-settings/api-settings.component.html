@@ -14,7 +14,7 @@
     <thead>
       <tr>
         <th>Name</th>
-        <th>Base URL</th>
+        <th>Auth Type</th>
         <th>Token URL</th>
         <th>Timeout (s)</th>
         <th>Active</th>
@@ -24,7 +24,7 @@
     <tbody>
       <tr *ngFor="let item of items">
         <td>{{ item.name }}</td>
-        <td>{{ item.baseUrl }}</td>
+        <td>{{ item.authorizationType }}</td>
         <td>{{ item.tokenUrl || '-' }}</td>
         <td>{{ item.timeoutSeconds }}</td>
         <td>{{ item.isActive ? 'Yes' : 'No' }}</td>
@@ -63,23 +63,25 @@
     </div>
 
     <div class="form-row">
-      <label>Base URL</label>
-      <input formControlName="baseUrl" type="url" placeholder="https://api.example.com" />
+      <label>Authorization Type</label>
+      <select formControlName="authorizationType">
+        <option value="None">None</option>
+        <option value="Bearer">Bearer</option>
+        <option value="ApiKey">API Key</option>
+        <option value="Basic">Basic</option>
+      </select>
     </div>
 
     <div class="form-row">
       <label>Token URL</label>
-      <input formControlName="tokenUrl" type="url" placeholder="https://api.example.com/login" />
+      <input formControlName="tokenUrl" type="url" placeholder="https://api.example.com/auth/login" />
     </div>
 
     <div class="form-row">
-      <label>Email</label>
-      <input formControlName="username" type="text" />
-    </div>
-
-    <div class="form-row">
-      <label>Password</label>
-      <input formControlName="password" type="password" placeholder="Leave blank to keep current" />
+      <label>Credentials Payload (JSON)</label>
+      <textarea formControlName="credentialsPayload"
+                rows="4"
+                placeholder='{"email":"user@example.com","password":"secret"}'></textarea>
     </div>
 
     <div class="form-row">
