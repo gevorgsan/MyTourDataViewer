@@ -21,10 +21,9 @@ public class SearchRequestController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>Search requests via the external API using the specified API settings for authorization.</summary>
+    /// <summary>Search requests via the external API using the default API settings for authorization.</summary>
     [HttpPost]
     public async Task<IActionResult> Search(
-        [FromQuery] int apiSettingsId,
         [FromBody] SearchRequestDto request,
         CancellationToken cancellationToken)
     {
@@ -33,17 +32,17 @@ public class SearchRequestController : ControllerBase
 
         try
         {
-            var results = await _searchRequestService.SearchAsync(apiSettingsId, request, cancellationToken);
+            var results = await _searchRequestService.SearchAsync(request, cancellationToken);
             return Ok(results);
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "SearchRequest configuration error for API settings {ApiSettingsId}.", apiSettingsId);
+            _logger.LogWarning(ex, "SearchRequest configuration error.");
             return BadRequest(new { message = ex.Message });
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogWarning(ex, "SearchRequest external API error for API settings {ApiSettingsId}.", apiSettingsId);
+            _logger.LogWarning(ex, "SearchRequest external API error.");
             return StatusCode(502, new { message = ex.Message });
         }
     }
