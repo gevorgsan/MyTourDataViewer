@@ -1,10 +1,14 @@
 <div class="login-container">
   <h2>MyTourDataViewer — Sign In</h2>
-  <!-- TODO: implement login form -->
-  <form>
-    <label>Username <input type="text" name="username" /></label>
-    <label>Password <input type="password" name="password" /></label>
-    <button type="submit">Login</button>
+  <form #loginForm="ngForm" (ngSubmit)="onSubmit()">
+    <label>Username
+      <input type="text" name="username" [(ngModel)]="credentials.username" required autocomplete="username" />
+    </label>
+    <label>Password
+      <input type="password" name="password" [(ngModel)]="credentials.password" required autocomplete="current-password" />
+    </label>
+    <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+    <button type="submit" [disabled]="loading || loginForm.invalid">Login</button>
   </form>
 </div>
 
