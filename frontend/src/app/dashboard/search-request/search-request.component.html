@@ -1,23 +1,7 @@
 <div class="search-request-container">
   <h2>Search Requests</h2>
 
-  <!-- API config loading -->
-  <p *ngIf="apisState === 'loading'" class="state-msg">Loading API configurations…</p>
-  <p *ngIf="apisState === 'error'" class="state-msg error">{{ errorMessage }}</p>
-
-  <ng-container *ngIf="apisState === 'success'">
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="search-form" novalidate>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="apiSettingsId">API Configuration <span class="required">*</span></label>
-          <select id="apiSettingsId" formControlName="apiSettingsId" [class.invalid]="isInvalid('apiSettingsId')">
-            <option [ngValue]="null" disabled>— select —</option>
-            <option *ngFor="let api of apis" [ngValue]="api.id">{{ api.name }}</option>
-          </select>
-          <span class="field-error" *ngIf="isInvalid('apiSettingsId')">API configuration is required.</span>
-        </div>
-      </div>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="search-form" novalidate>
 
       <div class="form-row two-col">
         <div class="form-group">
@@ -103,5 +87,4 @@
         </table>
       </div>
     </ng-container>
-  </ng-container>
 </div>
