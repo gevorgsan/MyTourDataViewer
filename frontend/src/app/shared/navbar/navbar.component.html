@@ -9,8 +9,7 @@
   </button>
 
   <div class="nav-links" [class.open]="menuOpen" (click)="menuOpen = false">
-    <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
-    <a routerLink="/dashboard/search-requests" routerLinkActive="active">Search Requests</a>
+    <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
     <!-- TODO: show Admin links only for Administrator role -->
     <a routerLink="/admin/users" routerLinkActive="active">Users</a>
     <a routerLink="/admin/api-settings" routerLinkActive="active">API Settings</a>

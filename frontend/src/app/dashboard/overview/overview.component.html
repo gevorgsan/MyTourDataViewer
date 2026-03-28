@@ -1,0 +1,66 @@
+<div class="overview-container">
+
+  <!-- API list loading states -->
+  <p *ngIf="apisState === 'loading'" class="state-msg">Loading API configurations…</p>
+  <p *ngIf="apisState === 'error'" class="state-msg error">{{ errorMessage }}</p>
+
+  <div *ngIf="apisState === 'success'" class="layout">
+
+    <!-- Left panel: API selector -->
+    <aside class="api-list">
+      <h3>Available APIs</h3>
+      <p *ngIf="apis.length === 0" class="empty">No active API configurations found.<br>Add one in the Admin → API Settings page.</p>
+      <ul>
+        <li *ngFor="let api of apis"
+            [class.active]="api.id === selectedApiId"
+            (click)="selectApi(api.id)">
+          <span class="api-name">{{ api.name }}</span>
+          <span class="api-url">{{ api.baseUrl }}</span>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Right panel: data viewer -->
+    <section class="data-panel">
+
+      <ng-container *ngIf="selectedApiId == null">
+        <p class="hint">← Select an API from the list to view its data.</p>
+      </ng-container>
+
+      <ng-container *ngIf="selectedApiId != null">
+        <h3>{{ selectedApi?.name }}</h3>
+
+        <div class="controls">
+          <label>
+            Endpoint
+            <select [(ngModel)]="selectedEndpoint" *ngIf="endpointOptions.length > 0">
+              <option *ngFor="let ep of endpointOptions" [value]="ep">{{ ep }}</option>
+            </select>
+            <input *ngIf="endpointOptions.length === 0"
+                   type="text"
+                   [(ngModel)]="selectedEndpoint"
+                   placeholder="/path (optional)" />
+          </label>
+          <button class="btn btn-primary" (click)="fetchData()" [disabled]="dataState === 'loading'">
+            {{ dataState === 'loading' ? 'Loading…' : 'Fetch Data' }}
+          </button>
+        </div>
+
+        <!-- States -->
+        <div *ngIf="dataState === 'loading'" class="state-msg">Fetching data…</div>
+
+        <div *ngIf="dataState === 'error'" class="state-msg error">
+          <strong>Error:</strong> {{ errorMessage }}
+        </div>
+
+        <div *ngIf="dataState === 'success'" class="result">
+          <div class="result-header">
+            <span class="badge success">✔ Success</span>
+          </div>
+          <pre class="result-body">{{ dataJson }}</pre>
+        </div>
+      </ng-container>
+
+    </section>
+  </div>
+</div>
