@@ -18,6 +18,38 @@ public class SearchRequestDto
     public int? RequestStatus { get; set; }
 }
 
+/// <summary>Raw item returned by the external GetRequestHistory endpoint.</summary>
+public class RequestHistoryItem
+{
+    [JsonPropertyName("requestId")]
+    public int RequestId { get; set; }
+
+    [JsonPropertyName("changeType")]
+    public string? ChangeType { get; set; }
+
+    [JsonPropertyName("changedAt")]
+    public DateTime ChangedAt { get; set; }
+
+    [JsonPropertyName("changedBy")]
+    public string? ChangedBy { get; set; }
+
+    [JsonPropertyName("oldValuesJson")]
+    public string? OldValuesJson { get; set; }
+
+    [JsonPropertyName("newValuesJson")]
+    public string? NewValuesJson { get; set; }
+}
+
+/// <summary>Processed history item with parsed old/new values returned to the frontend.</summary>
+public class RequestHistoryItemDto
+{
+    public int RequestId { get; set; }
+    public string? ChangeType { get; set; }
+    public DateTime ChangedAt { get; set; }
+    public string? ChangedBy { get; set; }
+    public Dictionary<string, object?>? OldValues { get; set; }
+    public Dictionary<string, object?>? NewValues { get; set; }
+}
 /// <summary>A single item returned by the external SearchRequest endpoint.</summary>
 public class SearchRequestItem
 {
