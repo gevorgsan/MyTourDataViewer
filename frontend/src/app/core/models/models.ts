@@ -107,8 +107,8 @@ export interface RequestHistoryItem {
   changeType?: string;
   changedAt: string;
   changedBy?: string;
-  oldValues?: Record<string, string | null>;
-  newValues?: Record<string, string | null>;
+  oldValues?: Record<string, string | number | boolean | null>;
+  newValues?: Record<string, string | number | boolean | null>;
 }
 
 export interface TestConnectionRequest {

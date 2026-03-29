@@ -114,6 +114,7 @@ h1, h2, h3, h4 {
     color: var(--color-accent);
     border-color: var(--color-accent);
     &:not(:disabled):hover { background: var(--color-accent); color: #fff; }
+    &.active { background: var(--color-accent); color: #fff; }
   }
 
   &.btn-sm {

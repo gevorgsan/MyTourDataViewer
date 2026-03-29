@@ -104,7 +104,7 @@ export class SearchRequestComponent implements OnInit {
     return this.expandedRows.has(index);
   }
 
-  getValueKeys(obj: Record<string, string | null> | undefined | null): string[] {
+  getValueKeys(obj: Record<string, string | number | boolean | null> | undefined | null): string[] {
     if (!obj) return [];
     return Object.keys(obj);
   }
