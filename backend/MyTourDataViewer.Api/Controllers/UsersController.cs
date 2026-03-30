@@ -53,6 +53,16 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id}/change-password")]
+    public async Task<IActionResult> ChangePassword(string id, [FromBody] ChangePasswordRequest request)
+    {
+        var (success, error) = await _userService.ChangePasswordAsync(id, request.NewPassword);
+        if (!success)
+            return error == "User not found." ? NotFound() : BadRequest(new { message = error });
+
+        return NoContent();
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {

@@ -22,6 +22,15 @@ export class UsersComponent implements OnInit {
   formSuccess = '';
   form: CreateUserRequest = this.emptyForm();
 
+  // Change-password modal
+  showPasswordModal = false;
+  passwordModalUser: User | null = null;
+  passwordModalState: FormState = 'idle';
+  passwordModalError = '';
+  passwordModalSuccess = '';
+  newPassword = '';
+  confirmPassword = '';
+
   readonly roles = ['Administrator', 'Viewer'];
 
   constructor(private readonly userService: UserService) {}
@@ -68,6 +77,45 @@ export class UsersComponent implements OnInit {
       error: err => {
         this.formState = 'error';
         this.formError = err?.error?.message ?? 'Failed to create user.';
+      }
+    });
+  }
+
+  openPasswordModal(user: User): void {
+    this.passwordModalUser = user;
+    this.newPassword = '';
+    this.confirmPassword = '';
+    this.passwordModalState = 'idle';
+    this.passwordModalError = '';
+    this.passwordModalSuccess = '';
+    this.showPasswordModal = true;
+  }
+
+  closePasswordModal(): void {
+    this.showPasswordModal = false;
+    this.passwordModalUser = null;
+  }
+
+  submitChangePassword(): void {
+    if (this.newPassword !== this.confirmPassword) {
+      this.passwordModalError = 'Passwords do not match.';
+      return;
+    }
+
+    this.passwordModalState = 'submitting';
+    this.passwordModalError = '';
+    this.passwordModalSuccess = '';
+
+    this.userService.changePassword(this.passwordModalUser!.id, this.newPassword).subscribe({
+      next: () => {
+        this.passwordModalState = 'success';
+        this.passwordModalSuccess = `Password for "${this.passwordModalUser!.username}" changed successfully.`;
+        this.newPassword = '';
+        this.confirmPassword = '';
+      },
+      error: err => {
+        this.passwordModalState = 'error';
+        this.passwordModalError = err?.error?.message ?? 'Failed to change password.';
       }
     });
   }
