@@ -100,6 +100,146 @@ docker-compose up --build
 
 Set `DbProvider=postgres` in `docker-compose.yml` or in `appsettings.json` to use PostgreSQL instead of SQLite.
 
+## Deploy on Render
+
+Render handles HTTPS termination automatically. There are two ways to deploy:
+
+- **Option A — Blueprint (recommended):** one-click, all services provisioned automatically from `render.yaml`.
+- **Option B — Manual:** create each service by hand in the Render dashboard.
+
+---
+
+### Option A — Blueprint (one-click)
+
+#### Prerequisites
+- A [Render account](https://render.com/)
+- This repository pushed to GitHub (or GitLab/Bitbucket)
+
+#### Steps
+
+1. Log in to [dashboard.render.com](https://dashboard.render.com/).
+2. Click **New → Blueprint**.
+3. Connect your GitHub account and select this repository.
+4. Render reads `render.yaml` and shows a preview of the three resources it will create:
+   - `mytour-db` — managed PostgreSQL database
+   - `mytour-backend` — ASP.NET Core Web API (Docker)
+   - `mytour-frontend` — Angular + nginx (Docker)
+5. Click **Apply**. Render will:
+   - Provision the PostgreSQL database.
+   - Build and deploy the backend; EF Core migrations run automatically on first startup.
+   - Build and deploy the frontend; nginx is configured at container start to proxy `/api/` to the backend.
+   - Wire `CORS_ORIGINS` (backend) and `BACKEND_URL` (frontend) automatically using each service's public `https://` URL.
+   - Generate a cryptographically secure random `Jwt__Key`.
+6. Wait for both web services to show **Live** (first builds take 3–5 minutes).
+7. Open the frontend URL (shown on the `mytour-frontend` service page) and log in with the default credentials.
+
+> **After first login:** change the default admin password immediately via Admin → Users → Change Password.
+
+#### Cost notes (free tier)
+
+| Resource | Free-tier behaviour |
+|---|---|
+| Web services | Sleep after 15 min of inactivity; 30–60 s cold-start wake-up |
+| PostgreSQL | Deleted after 90 days — upgrade to **Basic** ($7/mo) before the trial ends |
+| Starter web services | $7/mo each — always-on, no sleep |
+
+---
+
+### Option B — Manual deployment
+
+#### 1 — Create a PostgreSQL database
+
+1. **New → PostgreSQL**
+2. Name it `mytour-db`, choose **Free** plan, region **Oregon**.
+3. After it's ready, copy the **Internal Database URL** (used in step 2).
+
+#### 2 — Create the backend Web Service
+
+1. **New → Web Service**, connect your repo.
+2. Set:
+
+| Setting | Value |
+|---|---|
+| **Runtime** | Docker |
+| **Dockerfile path** | `backend/MyTourDataViewer.Api/Dockerfile` |
+| **Docker context** | `backend/MyTourDataViewer.Api` |
+| **Port** | `5000` |
+| **Health check path** | `/swagger` |
+
+3. Add environment variables:
+
+| Variable | Value |
+|---|---|
+| `ASPNETCORE_URLS` | `http://+:5000` |
+| `DbProvider` | `postgres` |
+| `ConnectionStrings__Postgres` | Paste the **Internal Database URL** from step 1 |
+| `Jwt__Key` | Generate with `openssl rand -base64 32` — **keep secret** |
+| `Jwt__Issuer` | `MyTourDataViewer` |
+| `Jwt__Audience` | `MyTourDataViewerClients` |
+| `CORS_ORIGINS` | Your frontend URL, e.g. `https://mytour-frontend.onrender.com` (fill in after step 3) |
+
+4. Click **Create Web Service** and wait for **Live**.
+
+#### 3 — Create the frontend Web Service
+
+1. **New → Web Service**, connect your repo.
+2. Set:
+
+| Setting | Value |
+|---|---|
+| **Runtime** | Docker |
+| **Dockerfile path** | `frontend/Dockerfile` |
+| **Docker context** | `frontend` |
+| **Port** | `80` |
+
+3. Add environment variables:
+
+| Variable | Value |
+|---|---|
+| `BACKEND_URL` | Your backend URL, e.g. `https://mytour-backend.onrender.com` |
+
+> `BACKEND_URL` is injected into the nginx config at container startup; nginx proxies all `/api/` requests to that URL.
+
+4. Click **Create Web Service** and wait for **Live**.
+
+#### 4 — Wire CORS
+
+Once the frontend service URL is known (e.g. `https://mytour-frontend.onrender.com`), go back to the **backend** service → **Environment** and set:
+
+```
+CORS_ORIGINS = https://mytour-frontend.onrender.com
+```
+
+Then click **Save Changes** (triggers a re-deploy).
+
+---
+
+### Architecture overview
+
+```
+Browser
+  │  HTTPS
+  ▼
+mytour-frontend  (Docker / nginx, port 80)
+  │  /api/* → proxy_pass BACKEND_URL
+  ▼
+mytour-backend   (Docker / ASP.NET Core, port 5000)
+  │  EF Core / Npgsql
+  ▼
+mytour-db        (Render managed PostgreSQL)
+```
+
+Render issues a free TLS certificate for every service URL automatically — no HTTPS configuration is needed.
+
+---
+
+### Post-deployment checklist
+
+- [ ] Log in with `admin` / `Admin@123456` and **change the default password** immediately.
+- [ ] Confirm the dashboard loads data (Admin → API Settings → add an external API).
+- [ ] Upgrade the PostgreSQL plan to **Basic** before the 90-day free trial ends.
+- [ ] (Optional) Upgrade web services to **Starter** ($7/mo each) to eliminate cold-start delays.
+
 ## Configuration
 
 Key settings in `backend/MyTourDataViewer.Api/appsettings.json`:

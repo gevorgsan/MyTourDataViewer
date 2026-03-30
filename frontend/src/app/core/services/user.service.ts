@@ -28,6 +28,10 @@ export class UserService {
     return this.http.put<void>(`${this.baseUrl}/${id}`, request);
   }
 
+  changePassword(id: string, newPassword: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/${id}/change-password`, { newPassword });
+  }
+
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }

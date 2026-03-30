@@ -1,0 +1,76 @@
+# render.yaml – Render Blueprint (Infrastructure as Code)
+# https://render.com/docs/blueprint-spec
+#
+# Usage: Connect your GitHub repo to Render → New → Blueprint.
+# Render will provision the database, backend, and frontend automatically.
+#
+# ─── Cost summary (as of 2025) ────────────────────────────────────────────────
+#  Free plan web services : sleep after 15 min of inactivity (30–60 s cold start)
+#  Free plan PostgreSQL   : deleted after 90 days → upgrade to Basic ($7/mo)
+#  Starter web services   : $7/mo each — always-on, no sleep
+# ──────────────────────────────────────────────────────────────────────────────
+
+databases:
+  - name: mytour-db
+    databaseName: mytourviewer
+    user: mytour
+    plan: free          # upgrade to "basic" ($7/mo) before the 90-day trial ends
+    region: oregon
+
+services:
+  # ── Backend (ASP.NET Core 10 Web API) ────────────────────────────────────────
+  - type: web
+    name: mytour-backend
+    region: oregon
+    plan: free          # change to "starter" ($7/mo) to eliminate cold-start delays
+    runtime: docker
+    dockerfilePath: backend/MyTourDataViewer.Api/Dockerfile
+    dockerContext: backend/MyTourDataViewer.Api
+    port: 5000
+    healthCheckPath: /swagger
+    envVars:
+      - key: ASPNETCORE_URLS
+        value: http://+:5000
+
+      - key: DbProvider
+        value: postgres
+
+      # Render injects the managed database connection string automatically.
+      - key: ConnectionStrings__Postgres
+        fromDatabase:
+          name: mytour-db
+          property: connectionString
+
+      # Render generates a cryptographically secure random value on first deploy.
+      - key: Jwt__Key
+        generateValue: true
+
+      - key: Jwt__Issuer
+        value: MyTourDataViewer
+
+      - key: Jwt__Audience
+        value: MyTourDataViewerClients
+
+      # Allow requests from the frontend service (full https:// URL resolved after both services exist).
+      - key: CORS_ORIGINS
+        fromService:
+          type: web
+          name: mytour-frontend
+          property: url
+
+  # ── Frontend (Angular 19 + nginx) ────────────────────────────────────────────
+  - type: web
+    name: mytour-frontend
+    region: oregon
+    plan: free
+    runtime: docker
+    dockerfilePath: frontend/Dockerfile
+    dockerContext: frontend
+    port: 80
+    envVars:
+      # nginx proxies /api/ calls to this URL at container startup (via envsubst).
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: mytour-backend
+          property: url

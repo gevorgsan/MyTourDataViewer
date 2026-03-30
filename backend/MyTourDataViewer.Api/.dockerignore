@@ -1,0 +1,10 @@
+obj/
+bin/
+*.db
+*.db-shm
+*.db-wal
+logs/
+.vs/
+**/*.user
+**/*.suo
+Properties/launchSettings.json

@@ -8,5 +8,6 @@ public interface IUserService
     Task<UserDto?> GetByIdAsync(string id);
     Task<(bool Success, string? Error, UserDto? User)> CreateAsync(CreateUserRequest request);
     Task<(bool Success, string? Error)> UpdateAsync(string id, UpdateUserRequest request);
+    Task<(bool Success, string? Error)> ChangePasswordAsync(string id, string newPassword);
     Task<(bool Success, string? Error)> DeleteAsync(string id);
 }

@@ -108,6 +108,23 @@ public class UserService : IUserService
         return (true, null);
     }
 
+    public async Task<(bool Success, string? Error)> ChangePasswordAsync(string id, string newPassword)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null) return (false, "User not found.");
+
+        var token    = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var pwResult = await _userManager.ResetPasswordAsync(user, token, newPassword);
+        if (!pwResult.Succeeded)
+        {
+            var error = string.Join("; ", pwResult.Errors.Select(e => e.Description));
+            _logger.LogWarning("Failed to change password for user {Id}: {Error}", id, error);
+            return (false, error);
+        }
+
+        return (true, null);
+    }
+
     public async Task<(bool Success, string? Error)> DeleteAsync(string id)
     {
         var user = await _userManager.FindByIdAsync(id);
