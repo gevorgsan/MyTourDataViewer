@@ -58,7 +58,7 @@ public class UsersController : ControllerBase
     {
         var (success, error) = await _userService.ChangePasswordAsync(id, request.NewPassword);
         if (!success)
-            return error == "User not found." ? NotFound() : BadRequest(new { message = error });
+            return error == "User not found." ? NotFound(new { message = error }) : BadRequest(new { message = error });
 
         return NoContent();
     }

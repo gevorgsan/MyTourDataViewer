@@ -117,7 +117,7 @@ export class UsersComponent implements OnInit {
       },
       error: err => {
         this.passwordModalState = 'error';
-        this.passwordModalError = err?.error?.message ?? 'Failed to change password.';
+        this.passwordModalError = err?.error?.message ?? err?.error?.title ?? 'Failed to change password.';
       }
     });
   }
