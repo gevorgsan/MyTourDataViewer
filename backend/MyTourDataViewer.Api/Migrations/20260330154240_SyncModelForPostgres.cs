@@ -109,14 +109,7 @@ namespace MyTourDataViewer.Api.Migrations
                 oldMaxLength: 256,
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<DateTimeOffset>(
-                name: "LockoutEnd",
-                table: "AspNetUsers",
-                type: "timestamp with time zone",
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "TEXT",
-                oldNullable: true);
+            migrationBuilder.Sql(@"ALTER TABLE ""AspNetUsers"" ALTER COLUMN ""LockoutEnd"" TYPE timestamp with time zone USING ""LockoutEnd""::timestamp with time zone;");
 
             migrationBuilder.Sql(@"ALTER TABLE ""AspNetUsers"" ALTER COLUMN ""LockoutEnabled"" TYPE boolean USING ""LockoutEnabled""::boolean;");
 
@@ -143,13 +136,7 @@ namespace MyTourDataViewer.Api.Migrations
                 oldMaxLength: 256,
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CreatedAt",
-                table: "AspNetUsers",
-                type: "timestamp with time zone",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "TEXT");
+            migrationBuilder.Sql(@"ALTER TABLE ""AspNetUsers"" ALTER COLUMN ""CreatedAt"" TYPE timestamp with time zone USING ""CreatedAt""::timestamp with time zone;");
 
             migrationBuilder.AlterColumn<string>(
                 name: "ConcurrencyStamp",
@@ -343,13 +330,7 @@ namespace MyTourDataViewer.Api.Migrations
                 oldType: "TEXT",
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "UpdatedAt",
-                table: "ApiSettings",
-                type: "timestamp with time zone",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "TEXT");
+            migrationBuilder.Sql(@"ALTER TABLE ""ApiSettings"" ALTER COLUMN ""UpdatedAt"" TYPE timestamp with time zone USING ""UpdatedAt""::timestamp with time zone;");
 
             migrationBuilder.AlterColumn<string>(
                 name: "TokenUrl",
@@ -416,13 +397,7 @@ namespace MyTourDataViewer.Api.Migrations
                 oldMaxLength: 8192,
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CreatedAt",
-                table: "ApiSettings",
-                type: "timestamp with time zone",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "TEXT");
+            migrationBuilder.Sql(@"ALTER TABLE ""ApiSettings"" ALTER COLUMN ""CreatedAt"" TYPE timestamp with time zone USING ""CreatedAt""::timestamp with time zone;");
 
             migrationBuilder.AlterColumn<string>(
                 name: "BearerToken",
