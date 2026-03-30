@@ -92,12 +92,14 @@ export class UsersComponent implements OnInit {
   }
 
   closePasswordModal(): void {
+    if (this.passwordModalState === 'submitting') return;
     this.showPasswordModal = false;
     this.passwordModalUser = null;
   }
 
   submitChangePassword(): void {
     if (this.newPassword !== this.confirmPassword) {
+      this.passwordModalState = 'idle';
       this.passwordModalError = 'Passwords do not match.';
       return;
     }
