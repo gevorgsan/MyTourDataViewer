@@ -83,8 +83,11 @@ builder.Services.AddAuthentication(opt =>
 // ── CORS ───────────────────────────────────────────────────────────────────────
 // Set CORS_ORIGINS to a comma-separated list of allowed origins.
 // Defaults to localhost for local development.
+// Render's fromService host property returns a bare hostname; prepend https:// when no scheme is present.
 var corsOrigins = (builder.Configuration["CORS_ORIGINS"] ?? "http://localhost:4200")
-    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+    .Select(o => o.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || o.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ? o : $"https://{o}")
+    .ToArray();
 builder.Services.AddCors(opt =>
     opt.AddDefaultPolicy(policy =>
         policy.WithOrigins(corsOrigins)
