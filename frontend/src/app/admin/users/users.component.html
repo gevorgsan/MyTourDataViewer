@@ -1,6 +1,53 @@
 <div class="users-container">
-  <h2>User Management</h2>
-  <p>Users with the Administrator role are labeled and highlighted below.</p>
+  <div class="users-header">
+    <div>
+      <h2>User Management</h2>
+      <p>Users with the Administrator role are labeled and highlighted below.</p>
+    </div>
+    <button class="btn-create" type="button" (click)="toggleCreateForm()">
+      {{ showCreateForm ? 'Cancel' : '+ Create User' }}
+    </button>
+  </div>
+
+  <div class="create-form-wrapper" *ngIf="showCreateForm">
+    <h3>Create New User</h3>
+    <p *ngIf="formState === 'success'" class="form-msg success">{{ formSuccess }}</p>
+    <p *ngIf="formState === 'error'" class="form-msg error">{{ formError }}</p>
+
+    <form class="create-form" (ngSubmit)="submitCreate()" #createForm="ngForm">
+      <div class="form-row">
+        <label for="username">Username *</label>
+        <input id="username" type="text" name="username" [(ngModel)]="form.username" required
+               placeholder="e.g. johndoe" [disabled]="formState === 'submitting'" />
+      </div>
+      <div class="form-row">
+        <label for="email">Email *</label>
+        <input id="email" type="email" name="email" [(ngModel)]="form.email" required
+               placeholder="e.g. john@example.com" [disabled]="formState === 'submitting'" />
+      </div>
+      <div class="form-row">
+        <label for="fullName">Full Name *</label>
+        <input id="fullName" type="text" name="fullName" [(ngModel)]="form.fullName" required
+               placeholder="e.g. John Doe" [disabled]="formState === 'submitting'" />
+      </div>
+      <div class="form-row">
+        <label for="password">Password *</label>
+        <input id="password" type="password" name="password" [(ngModel)]="form.password" required
+               minlength="6" pattern="^(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{6,}$"
+               placeholder="Min 6 chars, uppercase, digit, special" [disabled]="formState === 'submitting'" />
+      </div>
+      <div class="form-row">
+        <label for="role">Role *</label>
+        <select id="role" name="role" [(ngModel)]="form.role" required [disabled]="formState === 'submitting'">
+          <option *ngFor="let r of roles" [value]="r">{{ r }}</option>
+        </select>
+      </div>
+      <button class="btn-submit" type="submit"
+              [disabled]="createForm.invalid || formState === 'submitting'">
+        {{ formState === 'submitting' ? 'Creating...' : 'Create User' }}
+      </button>
+    </form>
+  </div>
 
   <p *ngIf="state === 'loading'" class="state-msg">Loading users...</p>
   <p *ngIf="state === 'error'" class="state-msg error">{{ errorMessage }}</p>
