@@ -14,7 +14,7 @@ databases:
   - name: mytour-db
     databaseName: mytourviewer
     user: mytour
-    plan: basic         # $7/mo – the minimum paid tier after Render retired free PostgreSQL (Nov 2024)
+    plan: free
     region: oregon
 
 services:
