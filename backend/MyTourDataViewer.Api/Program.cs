@@ -86,7 +86,7 @@ builder.Services.AddAuthentication(opt =>
 // Render's fromService host property returns a bare hostname; prepend https:// when no scheme is present.
 var corsOrigins = (builder.Configuration["CORS_ORIGINS"] ?? "http://localhost:4200")
     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-    .Select(o => o.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? o : $"https://{o}")
+    .Select(o => o.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || o.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ? o : $"https://{o}")
     .ToArray();
 builder.Services.AddCors(opt =>
     opt.AddDefaultPolicy(policy =>
