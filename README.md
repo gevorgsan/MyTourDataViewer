@@ -100,6 +100,60 @@ docker-compose up --build
 
 Set `DbProvider=postgres` in `docker-compose.yml` or in `appsettings.json` to use PostgreSQL instead of SQLite.
 
+## Deploy on Render
+
+Render handles HTTPS termination automatically. Deploy the backend and frontend as separate **Web Services**.
+
+### Backend Web Service
+
+| Setting | Value |
+|---|---|
+| **Runtime** | Docker |
+| **Dockerfile path** | `backend/MyTourDataViewer.Api/Dockerfile` |
+| **Port** | `5000` |
+
+**Environment variables** (set in Render dashboard → Environment):
+
+| Variable | Value |
+|---|---|
+| `ASPNETCORE_URLS` | `http://+:5000` |
+| `DbProvider` | `postgres` (recommended; SQLite data is lost on restart) |
+| `ConnectionStrings__Postgres` | Your Render PostgreSQL internal connection string |
+| `Jwt__Key` | A cryptographically secure random string, **≥ 32 bytes** — generate with `openssl rand -base64 32` |
+| `Jwt__Issuer` | `MyTourDataViewer` |
+| `Jwt__Audience` | `MyTourDataViewerClients` |
+| `CORS_ORIGINS` | Your frontend Render URL, e.g. `https://my-frontend.onrender.com` |
+
+> **PostgreSQL on Render**: create a Render PostgreSQL instance and use its **Internal Connection String** as `ConnectionStrings__Postgres`.
+
+### Frontend Web Service
+
+| Setting | Value |
+|---|---|
+| **Runtime** | Docker |
+| **Dockerfile path** | `frontend/Dockerfile` |
+| **Port** | `80` |
+
+**Environment variables**:
+
+| Variable | Value |
+|---|---|
+| `BACKEND_URL` | Your backend Render URL, e.g. `https://my-backend.onrender.com` |
+
+> `BACKEND_URL` is injected into the nginx config at container startup; nginx proxies all `/api/` requests to that URL.
+
+### Render deployment summary
+
+```
+frontend (Docker, port 80)
+  └─ nginx proxies /api/ → BACKEND_URL
+
+backend  (Docker, port 5000)
+  └─ PostgreSQL (Render managed database)
+```
+
+Render issues a free TLS certificate for every service URL automatically — no extra HTTPS configuration is needed.
+
 ## Configuration
 
 Key settings in `backend/MyTourDataViewer.Api/appsettings.json`:

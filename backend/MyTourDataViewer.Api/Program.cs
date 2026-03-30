@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -79,9 +80,13 @@ builder.Services.AddAuthentication(opt =>
 });
 
 // ── CORS ───────────────────────────────────────────────────────────────────────
+// Set CORS_ORIGINS to a comma-separated list of allowed origins.
+// Defaults to localhost for local development.
+var corsOrigins = (builder.Configuration["CORS_ORIGINS"] ?? "http://localhost:4200")
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 builder.Services.AddCors(opt =>
     opt.AddDefaultPolicy(policy =>
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins(corsOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()));
 
@@ -101,6 +106,13 @@ builder.Services.AddScoped<ISearchRequestService, SearchRequestService>();
 // ──────────────────────────────────────────────────────────────────────────────
 var app = builder.Build();
 
+// Trust X-Forwarded-For and X-Forwarded-Proto from reverse proxies (e.g. Render).
+// Must be first in the pipeline so subsequent middleware sees the correct scheme/IP.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 app.UseSwagger();
 app.UseSwaggerUI(opt =>
 {
@@ -117,7 +129,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseSerilogRequestLogging();
-app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();

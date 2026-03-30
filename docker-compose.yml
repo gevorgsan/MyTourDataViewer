@@ -17,6 +17,7 @@ services:
       - Jwt__Audience=MyTourDataViewerClients
       - ConnectionStrings__DefaultConnection=Data Source=/data/mytourviewer.db
       - ConnectionStrings__Postgres=Host=db;Port=5432;Database=mytourviewer;Username=postgres;Password=postgres
+      - CORS_ORIGINS=http://localhost:4200
     volumes:
       - sqlite-data:/data
     depends_on:
@@ -31,6 +32,8 @@ services:
     container_name: mytour-frontend
     ports:
       - "4200:80"
+    environment:
+      - BACKEND_URL=http://backend:5000
     depends_on:
       - backend
     restart: unless-stopped
