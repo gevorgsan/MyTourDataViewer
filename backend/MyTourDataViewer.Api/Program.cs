@@ -33,10 +33,17 @@ builder.Services.AddSwaggerGen(opt =>
 // ── Database ───────────────────────────────────────────────────────────────────
 // Switch between SQLite (default) and PostgreSQL via the DBPROVIDER env var.
 var dbProvider = builder.Configuration["DbProvider"] ?? "sqlite";
+Log.Information("DbProvider = {DbProvider}", dbProvider);
+
 if (dbProvider.Equals("postgres", StringComparison.OrdinalIgnoreCase))
 {
+    var rawConnectionString = builder.Configuration.GetConnectionString("Postgres");
+    Log.Information("PostgreSQL connection string is {Status}",
+        string.IsNullOrWhiteSpace(rawConnectionString) ? "MISSING" : "present");
+
+    var pgConnectionString = NormalizePostgresConnectionString(rawConnectionString);
     builder.Services.AddDbContext<AppDbContext>(opt =>
-        opt.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
+        opt.UseNpgsql(pgConnectionString));
 }
 else
 {
@@ -141,4 +148,38 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
    .AllowAnonymous();
 
 app.Run();
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+/// <summary>
+/// Converts a PostgreSQL URI (postgres://user:pass@host:port/db) to an
+/// ADO.NET connection string that Npgsql understands.
+/// Render's managed PostgreSQL injects the URI format; Npgsql requires the
+/// key=value format.  If the input is already in ADO.NET format it is
+/// returned unchanged.
+/// </summary>
+static string? NormalizePostgresConnectionString(string? connectionString)
+{
+    if (string.IsNullOrWhiteSpace(connectionString))
+        return connectionString;
+
+    if (!connectionString.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) &&
+        !connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+        return connectionString;
+
+    var uri = new Uri(connectionString);
+    var host     = uri.Host;
+    var port     = uri.Port > 0 ? uri.Port : 5432;
+    var database = uri.AbsolutePath.TrimStart('/');
+
+    var user     = "";
+    var password  = "";
+    if (!string.IsNullOrEmpty(uri.UserInfo))
+    {
+        var parts = uri.UserInfo.Split(':', 2);
+        user     = Uri.UnescapeDataString(parts[0]);
+        password = parts.Length > 1 ? Uri.UnescapeDataString(parts[1]) : "";
+    }
+
+    return $"Host={host};Port={port};Database={database};Username={user};Password={password};SslMode=Require;TrustServerCertificate=true";
+}
 
