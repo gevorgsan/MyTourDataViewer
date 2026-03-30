@@ -26,12 +26,8 @@ services:
     runtime: docker
     dockerfilePath: backend/MyTourDataViewer.Api/Dockerfile
     dockerContext: backend/MyTourDataViewer.Api
-    port: 5000
     healthCheckPath: /health
     envVars:
-      - key: ASPNETCORE_URLS
-        value: http://+:5000
-
       - key: DbProvider
         value: postgres
 
@@ -66,7 +62,6 @@ services:
     runtime: docker
     dockerfilePath: frontend/Dockerfile
     dockerContext: frontend
-    port: 80
     envVars:
       # nginx proxies /api/ calls to this URL at container startup (via envsubst).
       - key: BACKEND_URL

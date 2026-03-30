@@ -12,4 +12,4 @@ RUN dotnet publish -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "MyTourDataViewer.Api.dll"]
+CMD ["/bin/sh", "-c", "exec dotnet MyTourDataViewer.Api.dll --urls \"http://+:${PORT:-5000}\""]
