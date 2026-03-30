@@ -1,23 +1,11 @@
 <div class="overview-container">
 
-  <!-- API list loading states -->
-  <p *ngIf="apisState === 'loading'" class="state-msg">Loading API configurations…</p>
-  <p *ngIf="apisState === 'error'" class="state-msg error">{{ errorMessage }}</p>
+  <div class="layout">
 
-  <div *ngIf="apisState === 'success'" class="layout">
-
-    <!-- Left panel: API selector -->
+    <!-- Left panel: system info -->
     <aside class="api-list">
-      <h3>Available APIs</h3>
-      <p *ngIf="apis.length === 0" class="empty">No active API configurations found.<br>Add one in the Admin → API Settings page.</p>
-      <ul>
-        <li *ngFor="let api of apis"
-            [class.active]="api.id === selectedApiId"
-            (click)="selectApi(api.id)">
-          <span class="api-name">{{ api.name }}</span>
-          <span class="api-url">{{ api.baseUrl }}</span>
-        </li>
-      </ul>
+      <h3>About This App</h3>
+      <p class="system-info">This app allows users to view MyTour requests and booking history.</p>
     </aside>
 
     <!-- Right panel: data viewer -->
