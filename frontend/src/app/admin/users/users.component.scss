@@ -1,6 +1,15 @@
 .users-container {
-  h2 {
+  .users-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
     margin-bottom: 1.25rem;
+  }
+
+  h2 {
+    margin-bottom: 0.25rem;
     font-size: 1.4rem;
     color: var(--color-primary);
   }
@@ -9,6 +18,88 @@
     color: var(--color-text-secondary);
     font-size: 0.9rem;
     margin-bottom: 1rem;
+  }
+
+  .btn-create {
+    padding: 0.45rem 1rem;
+    background: var(--color-primary, #2563eb);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md, 6px);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    &:hover { opacity: 0.9; }
+  }
+
+  .create-form-wrapper {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+
+    h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      margin-bottom: 1rem;
+    }
+  }
+
+  .form-msg {
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-md, 4px);
+    &.success { background: #dcfce7; color: #166534; }
+    &.error   { background: #fee2e2; color: #b91c1c; }
+  }
+
+  .create-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.75rem 1rem;
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+
+      label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+
+      input, select {
+        padding: 0.4rem 0.65rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md, 4px);
+        font-size: 0.875rem;
+        background: var(--color-surface-alt, #f9fafb);
+        color: var(--color-text);
+        &:focus { outline: 2px solid var(--color-primary, #2563eb); outline-offset: 1px; }
+        &:disabled { opacity: 0.6; cursor: not-allowed; }
+      }
+    }
+
+    .btn-submit {
+      align-self: flex-end;
+      padding: 0.45rem 1.25rem;
+      background: var(--color-primary, #2563eb);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md, 6px);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      &:hover:not(:disabled) { opacity: 0.9; }
+      &:disabled { opacity: 0.55; cursor: not-allowed; }
+    }
   }
 
   .state-msg.error {

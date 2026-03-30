@@ -16,6 +16,10 @@ export class NavbarComponent {
     private readonly router: Router
   ) {}
 
+  get isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
   logout(): void {
     this.menuOpen = false;
     this.authService.logout();

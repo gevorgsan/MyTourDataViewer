@@ -10,9 +10,11 @@
 
   <div class="nav-links" [class.open]="menuOpen" (click)="menuOpen = false">
     <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
-    <!-- TODO: show Admin links only for Administrator role -->
-    <a routerLink="/admin/users" routerLinkActive="active">Users</a>
-    <a routerLink="/admin/api-settings" routerLinkActive="active">API Settings</a>
+    <!-- Admin links visible only for Administrator role -->
+    <ng-container *ngIf="isAdmin">
+      <a routerLink="/admin/users" routerLinkActive="active">Users</a>
+      <a routerLink="/admin/api-settings" routerLinkActive="active">API Settings</a>
+    </ng-container>
     <button type="button" class="btn-logout" (click)="logout()">Logout</button>
   </div>
 </nav>
