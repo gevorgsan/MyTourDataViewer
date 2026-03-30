@@ -167,13 +167,19 @@ static string? NormalizePostgresConnectionString(string? connectionString)
         return connectionString;
 
     var uri = new Uri(connectionString);
-    var userInfo = uri.UserInfo.Split(':', 2);
-    var user     = Uri.UnescapeDataString(userInfo[0]);
-    var password  = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
     var host     = uri.Host;
     var port     = uri.Port > 0 ? uri.Port : 5432;
     var database = uri.AbsolutePath.TrimStart('/');
 
-    return $"Host={host};Port={port};Database={database};Username={user};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+    var user     = "";
+    var password  = "";
+    if (!string.IsNullOrEmpty(uri.UserInfo))
+    {
+        var parts = uri.UserInfo.Split(':', 2);
+        user     = Uri.UnescapeDataString(parts[0]);
+        password = parts.Length > 1 ? Uri.UnescapeDataString(parts[1]) : "";
+    }
+
+    return $"Host={host};Port={port};Database={database};Username={user};Password={password};SslMode=Require;TrustServerCertificate=true";
 }
 
