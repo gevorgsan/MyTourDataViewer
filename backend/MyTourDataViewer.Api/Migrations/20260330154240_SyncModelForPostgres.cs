@@ -56,13 +56,7 @@ namespace MyTourDataViewer.Api.Migrations
                 oldMaxLength: 256,
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<bool>(
-                name: "TwoFactorEnabled",
-                table: "AspNetUsers",
-                type: "boolean",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "INTEGER");
+            migrationBuilder.Sql(@"ALTER TABLE ""AspNetUsers"" ALTER COLUMN ""TwoFactorEnabled"" TYPE boolean USING ""TwoFactorEnabled""::boolean;");
 
             migrationBuilder.AlterColumn<string>(
                 name: "SecurityStamp",
@@ -73,13 +67,7 @@ namespace MyTourDataViewer.Api.Migrations
                 oldType: "TEXT",
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<bool>(
-                name: "PhoneNumberConfirmed",
-                table: "AspNetUsers",
-                type: "boolean",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "INTEGER");
+            migrationBuilder.Sql(@"ALTER TABLE ""AspNetUsers"" ALTER COLUMN ""PhoneNumberConfirmed"" TYPE boolean USING ""PhoneNumberConfirmed""::boolean;");
 
             migrationBuilder.AlterColumn<string>(
                 name: "PhoneNumber",
@@ -130,21 +118,9 @@ namespace MyTourDataViewer.Api.Migrations
                 oldType: "TEXT",
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<bool>(
-                name: "LockoutEnabled",
-                table: "AspNetUsers",
-                type: "boolean",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "INTEGER");
+            migrationBuilder.Sql(@"ALTER TABLE ""AspNetUsers"" ALTER COLUMN ""LockoutEnabled"" TYPE boolean USING ""LockoutEnabled""::boolean;");
 
-            migrationBuilder.AlterColumn<bool>(
-                name: "IsActive",
-                table: "AspNetUsers",
-                type: "boolean",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "INTEGER");
+            migrationBuilder.Sql(@"ALTER TABLE ""AspNetUsers"" ALTER COLUMN ""IsActive"" TYPE boolean USING ""IsActive""::boolean;");
 
             migrationBuilder.AlterColumn<string>(
                 name: "FullName",
@@ -154,13 +130,7 @@ namespace MyTourDataViewer.Api.Migrations
                 oldClrType: typeof(string),
                 oldType: "TEXT");
 
-            migrationBuilder.AlterColumn<bool>(
-                name: "EmailConfirmed",
-                table: "AspNetUsers",
-                type: "boolean",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "INTEGER");
+            migrationBuilder.Sql(@"ALTER TABLE ""AspNetUsers"" ALTER COLUMN ""EmailConfirmed"" TYPE boolean USING ""EmailConfirmed""::boolean;");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Email",
