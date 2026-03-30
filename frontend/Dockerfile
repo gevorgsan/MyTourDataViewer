@@ -8,7 +8,8 @@ RUN npm run build -- --configuration production
 
 # Serve stage
 FROM nginx:alpine
-COPY --from=build /app/dist/frontend /usr/share/nginx/html
+# Angular 19's application builder outputs browser files into dist/frontend/browser/
+COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
 # Store the config as a template; BACKEND_URL is substituted at container start.
 COPY nginx.conf /etc/nginx/nginx.conf.template
 EXPOSE 80

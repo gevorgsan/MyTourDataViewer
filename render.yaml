@@ -14,7 +14,7 @@ databases:
   - name: mytour-db
     databaseName: mytourviewer
     user: mytour
-    plan: free          # upgrade to "basic" ($7/mo) before the 90-day trial ends
+    plan: starter       # $7/mo – the minimum paid tier after Render retired free PostgreSQL (Nov 2024)
     region: oregon
 
 services:
