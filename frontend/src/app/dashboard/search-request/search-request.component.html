@@ -6,14 +6,14 @@
       <div class="form-row two-col">
         <div class="form-group">
           <label for="createdFrom">Created From <span class="required">*</span></label>
-          <input id="createdFrom" type="datetime-local" formControlName="createdFrom"
+          <input id="createdFrom" type="date" formControlName="createdFrom"
                  [class.invalid]="isInvalid('createdFrom')" />
           <span class="field-error" *ngIf="isInvalid('createdFrom')">Start date is required.</span>
         </div>
 
         <div class="form-group">
           <label for="createdTo">Created To <span class="required">*</span></label>
-          <input id="createdTo" type="datetime-local" formControlName="createdTo"
+          <input id="createdTo" type="date" formControlName="createdTo"
                  [class.invalid]="isInvalid('createdTo')" />
           <span class="field-error" *ngIf="isInvalid('createdTo')">End date is required.</span>
         </div>
