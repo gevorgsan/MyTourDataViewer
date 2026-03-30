@@ -47,12 +47,12 @@ services:
       - key: Jwt__Audience
         value: MyTourDataViewerClients
 
-      # Allow requests from the frontend service (full https:// URL resolved after both services exist).
+      # Allow requests from the frontend service.
       - key: CORS_ORIGINS
         fromService:
           type: web
           name: mytour-frontend
-          property: url
+          property: host
 
   # ── Frontend (Angular 19 + nginx) ────────────────────────────────────────────
   - type: web
@@ -68,4 +68,4 @@ services:
         fromService:
           type: web
           name: mytour-backend
-          property: url
+          property: host

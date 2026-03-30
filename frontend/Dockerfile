@@ -18,4 +18,5 @@ ENV BACKEND_URL=http://backend:5000
 # Default port for local Docker Compose usage.
 ENV PORT=80
 # envsubst replaces only ${BACKEND_URL} and ${PORT}, leaving nginx variables ($host etc.) intact.
-CMD ["/bin/sh", "-c", "set -e; envsubst '${BACKEND_URL} ${PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# Prepend https:// when BACKEND_URL is a bare hostname (Render injects the host property without a scheme).
+CMD ["/bin/sh", "-c", "set -e; case \"$BACKEND_URL\" in http*) ;; *) BACKEND_URL=\"https://$BACKEND_URL\";; esac; envsubst '${BACKEND_URL} ${PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
