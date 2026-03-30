@@ -98,62 +98,71 @@
       </div>
     </ng-container>
 
-    <!-- Request History Panel -->
-    <ng-container *ngIf="selectedRequestId !== null">
-      <div class="history-panel">
-        <h3>Request History — #{{ selectedRequestId }}</h3>
-
-        <div *ngIf="historyState === 'loading'" class="state-msg">Loading history…</div>
-
-        <div *ngIf="historyState === 'error'" class="state-msg error">
-          <strong>Error:</strong> {{ historyErrorMessage }}
+    <!-- Request History Modal -->
+    <div *ngIf="historyModalOpen && selectedRequestId !== null"
+         class="history-modal-backdrop"
+         (click)="closeHistory()">
+      <div class="history-modal" role="dialog" aria-modal="true"
+           [attr.aria-label]="'Request History #' + selectedRequestId"
+           (click)="$event.stopPropagation()">
+        <div class="history-modal-header">
+          <h3>Request History — #{{ selectedRequestId }}</h3>
+          <button class="btn btn-sm btn-outline close-btn" (click)="closeHistory()" aria-label="Close">✕</button>
         </div>
 
-        <ng-container *ngIf="historyState === 'success'">
-          <p *ngIf="history.length === 0" class="empty">No history records found.</p>
+        <div class="history-modal-body">
+          <div *ngIf="historyState === 'loading'" class="state-msg">Loading history…</div>
 
-          <div *ngFor="let record of history; let i = index" class="history-record">
-            <div class="history-record-header" (click)="toggleRow(i)">
-              <div class="history-record-meta">
-                <span class="badge change-type">{{ record.changeType ?? '—' }}</span>
-                <span class="changed-at">{{ record.changedAt | date:'medium' }}</span>
-                <span class="changed-by">by <strong>{{ record.changedBy ?? '—' }}</strong></span>
-              </div>
-              <button class="btn btn-sm btn-outline toggle-btn">
-                {{ isExpanded(i) ? '▲ Collapse' : '▼ Expand' }}
-              </button>
-            </div>
-
-            <div *ngIf="isExpanded(i)" class="history-record-body">
-              <div class="values-comparison">
-                <div class="values-column">
-                  <h4>Old Values</h4>
-                  <div *ngIf="!record.oldValues" class="empty-values">—</div>
-                  <table *ngIf="record.oldValues" class="values-table">
-                    <tbody>
-                      <tr *ngFor="let key of getValueKeys(record.oldValues)">
-                        <td class="value-key">{{ key }}</td>
-                        <td class="value-val">{{ record.oldValues![key] ?? '—' }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="values-column">
-                  <h4>New Values</h4>
-                  <div *ngIf="!record.newValues" class="empty-values">—</div>
-                  <table *ngIf="record.newValues" class="values-table">
-                    <tbody>
-                      <tr *ngFor="let key of getValueKeys(record.newValues)">
-                        <td class="value-key">{{ key }}</td>
-                        <td class="value-val">{{ record.newValues![key] ?? '—' }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+          <div *ngIf="historyState === 'error'" class="state-msg error">
+            <strong>Error:</strong> {{ historyErrorMessage }}
           </div>
-        </ng-container>
+
+          <ng-container *ngIf="historyState === 'success'">
+            <p *ngIf="history.length === 0" class="empty">No history records found.</p>
+
+            <div *ngFor="let record of history; let i = index" class="history-record">
+              <div class="history-record-header" (click)="toggleRow(i)">
+                <div class="history-record-meta">
+                  <span class="badge change-type">{{ record.changeType ?? '—' }}</span>
+                  <span class="changed-at">{{ record.changedAt | date:'medium' }}</span>
+                  <span class="changed-by">by <strong>{{ record.changedBy ?? '—' }}</strong></span>
+                </div>
+                <button class="btn btn-sm btn-outline toggle-btn">
+                  {{ isExpanded(i) ? '▲ Collapse' : '▼ Expand' }}
+                </button>
+              </div>
+
+              <div *ngIf="isExpanded(i)" class="history-record-body">
+                <div class="values-comparison">
+                  <div class="values-column">
+                    <h4>Old Values</h4>
+                    <div *ngIf="!record.oldValues" class="empty-values">—</div>
+                    <table *ngIf="record.oldValues" class="values-table">
+                      <tbody>
+                        <tr *ngFor="let key of getValueKeys(record.oldValues)">
+                          <td class="value-key">{{ key }}</td>
+                          <td class="value-val">{{ record.oldValues![key] ?? '—' }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="values-column">
+                    <h4>New Values</h4>
+                    <div *ngIf="!record.newValues" class="empty-values">—</div>
+                    <table *ngIf="record.newValues" class="values-table">
+                      <tbody>
+                        <tr *ngFor="let key of getValueKeys(record.newValues)">
+                          <td class="value-key">{{ key }}</td>
+                          <td class="value-val">{{ record.newValues![key] ?? '—' }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
       </div>
-    </ng-container>
+    </div>
 </div>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { SearchRequestService } from '../../core/services/search-request.service';
 import { RequestHistoryItem, SearchRequestItem } from '../../core/models/models';
@@ -19,6 +19,7 @@ export class SearchRequestComponent implements OnInit {
   errorMessage = '';
 
   selectedRequestId: number | null = null;
+  historyModalOpen = false;
   historyState: LoadState = 'idle';
   history: RequestHistoryItem[] = [];
   historyErrorMessage = '';
@@ -71,6 +72,7 @@ export class SearchRequestComponent implements OnInit {
   }
 
   selectRequest(item: SearchRequestItem): void {
+    this.historyModalOpen = true;
     if (this.selectedRequestId === item.id) {
       return;
     }
@@ -90,6 +92,17 @@ export class SearchRequestComponent implements OnInit {
         this.historyErrorMessage = this.extractErrorMessage(err);
       }
     });
+  }
+
+  closeHistory(): void {
+    this.historyModalOpen = false;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.historyModalOpen) {
+      this.closeHistory();
+    }
   }
 
   toggleRow(index: number): void {
