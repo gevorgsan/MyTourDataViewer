@@ -27,7 +27,7 @@ services:
     dockerfilePath: backend/MyTourDataViewer.Api/Dockerfile
     dockerContext: backend/MyTourDataViewer.Api
     port: 5000
-    healthCheckPath: /swagger
+    healthCheckPath: /health
     envVars:
       - key: ASPNETCORE_URLS
         value: http://+:5000
