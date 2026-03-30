@@ -33,8 +33,8 @@
       <div class="form-row">
         <label for="password">Password *</label>
         <input id="password" type="password" name="password" [(ngModel)]="form.password" required
-               minlength="6" pattern="^(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{6,}$"
-               placeholder="Min 6 chars, uppercase, digit, special" [disabled]="formState === 'submitting'" />
+               minlength="6" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{6,}$"
+               placeholder="Min 6 chars, uppercase, lowercase, digit, special" [disabled]="formState === 'submitting'" />
       </div>
       <div class="form-row">
         <label for="role">Role *</label>
@@ -104,11 +104,11 @@
       <label for="newPassword">New Password *</label>
       <input id="newPassword" type="password" name="newPassword"
              [(ngModel)]="newPassword" required minlength="6"
-             pattern="^(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{6,}$"
-             placeholder="Min 6 chars, uppercase, digit, special"
+             pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{6,}$"
+             placeholder="Min 6 chars, uppercase, lowercase, digit, special"
              aria-describedby="pw-hint"
              [disabled]="passwordModalState === 'submitting'" />
-      <span id="pw-hint" class="field-hint">At least 6 characters, one uppercase letter, one digit, and one special character.</span>
+      <span id="pw-hint" class="field-hint">At least 6 characters, one uppercase letter, one lowercase letter, one digit, and one special character.</span>
     </div>
     <div class="form-row">
       <label for="confirmPassword">Confirm Password *</label>
