@@ -17,10 +17,12 @@
         <input id="password" type="password" name="password" placeholder="Enter your password" autocomplete="current-password" [(ngModel)]="credentials.password" [disabled]="isSubmitting" />
       </div>
 
+      <p *ngIf="isRetrying" class="login-info" aria-live="polite">Server is starting up. Please wait&hellip;</p>
+
       <p *ngIf="errorMessage" class="login-error">{{ errorMessage }}</p>
 
       <button type="submit" class="btn-signin" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Signing In...' : 'Sign In' }}
+        {{ isRetrying ? 'Waiting for server...' : (isSubmitting ? 'Signing In...' : 'Sign In') }}
       </button>
     </form>
 
