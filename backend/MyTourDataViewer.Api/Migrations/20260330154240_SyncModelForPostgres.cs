@@ -480,13 +480,8 @@ namespace MyTourDataViewer.Api.Migrations
                 oldMaxLength: 2048,
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<bool>(
-                name: "RequiresAuthorization",
-                table: "ApiEndpointSettings",
-                type: "boolean",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "INTEGER");
+            migrationBuilder.Sql(
+                "ALTER TABLE \"ApiEndpointSettings\" ALTER COLUMN \"RequiresAuthorization\" TYPE boolean USING \"RequiresAuthorization\"::int::boolean;");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Password",
@@ -1128,13 +1123,8 @@ namespace MyTourDataViewer.Api.Migrations
                 oldMaxLength: 2048,
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<int>(
-                name: "RequiresAuthorization",
-                table: "ApiEndpointSettings",
-                type: "INTEGER",
-                nullable: false,
-                oldClrType: typeof(bool),
-                oldType: "boolean");
+            migrationBuilder.Sql(
+                "ALTER TABLE \"ApiEndpointSettings\" ALTER COLUMN \"RequiresAuthorization\" TYPE INTEGER USING \"RequiresAuthorization\"::int;");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Password",
