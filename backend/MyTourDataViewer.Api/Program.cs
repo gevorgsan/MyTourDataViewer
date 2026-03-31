@@ -124,6 +124,31 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
 
+// ── Startup readiness flag ────────────────────────────────────────────────────
+// The server starts listening immediately (before migrations run) so that Render
+// can reach the /health endpoint.  All non-health requests receive 503 while
+// migrations are pending; once migrations succeed the gate is set and the health
+// check returns 200, at which point Render routes real traffic to this service.
+// This eliminates the 502 Bad Gateway that nginx returned when the backend was
+// not yet listening during the migration window.
+//
+// ManualResetEventSlim.IsSet is backed by a volatile field, ensuring changes are
+// visible across threads without additional synchronisation.
+const string HealthPath = "/health";
+using var migrationsGate = new System.Threading.ManualResetEventSlim(false);
+
+// Return 503 for every request except /health while migrations are running.
+// This prevents requests from hitting controllers before the schema is ready.
+app.Use((context, next) =>
+{
+    if (!migrationsGate.IsSet && !context.Request.Path.StartsWithSegments(HealthPath))
+    {
+        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        return context.Response.WriteAsJsonAsync(new { message = "Service is starting. Please try again in a moment." });
+    }
+    return next();
+});
+
 app.UseSwagger();
 app.UseSwaggerUI(opt =>
 {
@@ -131,23 +156,55 @@ app.UseSwaggerUI(opt =>
     opt.RoutePrefix = "swagger";
 });
 
-// Apply pending migrations and seed default data on startup
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-    await DbSeeder.SeedAsync(scope.ServiceProvider);
-}
-
 app.UseSerilogRequestLogging();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
+
+// Health endpoint returns 503 while migrations are in progress and 200 once they
+// complete.  Render waits for 200 before routing traffic, so no real request
+// reaches a controller until the database schema is fully applied.
+app.MapGet(HealthPath, () => migrationsGate.IsSet
+    ? Results.Ok(new { status = "healthy" })
+    : Results.Json(new { status = "starting" }, statusCode: StatusCodes.Status503ServiceUnavailable))
    .AllowAnonymous();
 
-app.Run();
+// Start listening immediately so Render health checks succeed and nginx does not
+// receive connection-refused errors that produce 502 responses.
+await app.StartAsync();
+Log.Information("Server started; running database migrations");
+
+// Apply pending migrations with retry for transient PostgreSQL connection
+// failures.  On Render free tier the managed PostgreSQL may take several seconds
+// to accept connections after a cold start, so we back off exponentially.
+const int maxMigrationRetries = 3;
+for (var attempt = 1; attempt <= maxMigrationRetries; attempt++)
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
+        await DbSeeder.SeedAsync(scope.ServiceProvider);
+        break;
+    }
+    catch (Exception ex) when (attempt < maxMigrationRetries && IsTransientDbException(ex))
+    {
+        var delay = TimeSpan.FromSeconds(5 * attempt); // 5 s, 10 s
+        Log.Warning(ex,
+            "Migration attempt {Attempt}/{Max} failed (transient). Retrying in {Delay}s...",
+            attempt, maxMigrationRetries, (int)delay.TotalSeconds);
+        await Task.Delay(delay);
+    }
+    // Non-transient errors or the final attempt propagate, crashing the process
+    // so Render restarts the container and tries again.
+}
+
+migrationsGate.Set();
+Log.Information("Database migrations complete; service is healthy");
+
+await app.WaitForShutdownAsync();
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 /// <summary>
@@ -183,3 +240,15 @@ static string? NormalizePostgresConnectionString(string? connectionString)
     return $"Host={host};Port={port};Database={database};Username={user};Password={password};SslMode=Require;TrustServerCertificate=true";
 }
 
+/// <summary>
+/// Returns true when the exception represents a transient database connectivity
+/// failure that is safe to retry (e.g. PostgreSQL not yet accepting connections
+/// during a cold start).  Schema errors and other non-transient failures return
+/// false so they are not retried unnecessarily.
+/// </summary>
+static bool IsTransientDbException(Exception ex)
+{
+    var pg = (ex as Npgsql.NpgsqlException)
+          ?? ex.InnerException as Npgsql.NpgsqlException;
+    return pg?.IsTransient ?? false;
+}
