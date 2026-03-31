@@ -370,13 +370,7 @@ namespace MyTourDataViewer.Api.Migrations
                 oldType: "TEXT",
                 oldMaxLength: 200);
 
-            migrationBuilder.AlterColumn<bool>(
-                name: "IsActive",
-                table: "ApiSettings",
-                type: "boolean",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "INTEGER");
+            migrationBuilder.Sql(@"ALTER TABLE ""ApiSettings"" ALTER COLUMN ""IsActive"" TYPE boolean USING (""IsActive"" != 0);");
 
             migrationBuilder.AlterColumn<string>(
                 name: "EndpointUrls",
@@ -1018,13 +1012,7 @@ namespace MyTourDataViewer.Api.Migrations
                 oldType: "character varying(200)",
                 oldMaxLength: 200);
 
-            migrationBuilder.AlterColumn<int>(
-                name: "IsActive",
-                table: "ApiSettings",
-                type: "INTEGER",
-                nullable: false,
-                oldClrType: typeof(bool),
-                oldType: "boolean");
+            migrationBuilder.Sql(@"ALTER TABLE ""ApiSettings"" ALTER COLUMN ""IsActive"" TYPE INTEGER USING (""IsActive""::int);");
 
             migrationBuilder.AlterColumn<string>(
                 name: "EndpointUrls",
