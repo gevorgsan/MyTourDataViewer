@@ -48,11 +48,13 @@ services:
         value: MyTourDataViewerClients
 
       # Allow requests from the frontend service.
+      # property: url returns the full https:// URL (e.g. https://mytour-frontend.onrender.com)
+      # so no scheme-prepend logic in the backend is needed.
       - key: CORS_ORIGINS
         fromService:
           type: web
           name: mytour-frontend
-          property: host
+          property: url
 
   # ── Frontend (Angular 19 + nginx) ────────────────────────────────────────────
   - type: web
