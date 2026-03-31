@@ -64,8 +64,10 @@ services:
     dockerContext: frontend
     envVars:
       # nginx proxies /api/ calls to this URL at container startup (via envsubst).
+      # property: url returns the full https:// URL (e.g. https://mytour-backend.onrender.com)
+      # so no scheme-prepend logic in the Dockerfile CMD is needed.
       - key: BACKEND_URL
         fromService:
           type: web
           name: mytour-backend
-          property: host
+          property: url
