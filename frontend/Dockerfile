@@ -17,9 +17,18 @@ EXPOSE 80
 ENV BACKEND_URL=http://backend:5000
 # Default port for local Docker Compose usage.
 ENV PORT=80
-# envsubst replaces only ${BACKEND_URL}, ${PORT}, and ${NGINX_RESOLVER}, leaving nginx
-# variables ($host etc.) intact.
+# envsubst replaces only the listed ${…} placeholders, leaving nginx variables ($host etc.) intact.
 # Prepend https:// when BACKEND_URL is a bare hostname (Render injects the host property without a scheme).
+# BACKEND_HOST is the hostname(:port) extracted from BACKEND_URL so the proxy Host header matches
+# the upstream service – required for Render's edge router.
 # NGINX_RESOLVER is read from /etc/resolv.conf so nginx can resolve the upstream at request time
 # (avoids "host not found in upstream" startup failures when the backend isn't ready yet).
-CMD ["/bin/sh", "-c", "set -e; case \"$BACKEND_URL\" in http*) ;; *) BACKEND_URL=\"https://$BACKEND_URL\";; esac; export NGINX_RESOLVER=$(grep nameserver /etc/resolv.conf | head -1 | sed 's/nameserver //'); NGINX_RESOLVER=${NGINX_RESOLVER:-127.0.0.11}; export NGINX_RESOLVER; envsubst '${BACKEND_URL} ${PORT} ${NGINX_RESOLVER}' < /etc/nginx/nginx.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "\
+  set -e; \
+  case \"$BACKEND_URL\" in http*) ;; *) BACKEND_URL=\"https://$BACKEND_URL\";; esac; \
+  export BACKEND_HOST=$(echo \"$BACKEND_URL\" | sed -E 's|^https?://||; s|/.*||'); \
+  export NGINX_RESOLVER=$(grep nameserver /etc/resolv.conf | head -1 | sed 's/nameserver //'); \
+  NGINX_RESOLVER=${NGINX_RESOLVER:-127.0.0.11}; export NGINX_RESOLVER; \
+  envsubst '${BACKEND_URL} ${PORT} ${NGINX_RESOLVER} ${BACKEND_HOST}' \
+    < /etc/nginx/nginx.conf.template > /etc/nginx/conf.d/default.conf && \
+  nginx -g 'daemon off;'"]
