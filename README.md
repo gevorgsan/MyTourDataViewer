@@ -225,7 +225,7 @@ fly secrets set CORS_ORIGINS="https://mytour-frontend.fly.dev" --app mytour-back
 Browser
   │  HTTPS
   ▼
-mytour-frontend  (Docker / nginx, port 80)
+mytour-frontend  (Docker / nginx, PORT injected by platform)
   │  /api/* → proxy_pass BACKEND_URL
   ▼
 mytour-backend   (Docker / ASP.NET Core)
@@ -470,7 +470,7 @@ If you use a custom app name, replace `mytour-frontend` with your actual app nam
 
 | Variable | Description |
 |---|---|
-| `PORT` | `8080` — nginx listen port inside the container |
+| `PORT` | Injected by the platform (Render default `10000`; fallback `8080` for local Docker) |
 | `BACKEND_URL` | Full `https://` URL of the backend Fly app |
 
 ---
@@ -588,7 +588,7 @@ Render handles HTTPS termination automatically. There are two ways to deploy:
 | **Runtime** | Docker |
 | **Dockerfile path** | `frontend/Dockerfile` |
 | **Docker context** | `frontend` |
-| **Port** | `80` |
+| **Port** | Leave at Render default (`10000`) |
 
 3. Add environment variables:
 
@@ -618,7 +618,7 @@ Then click **Save Changes** (triggers a re-deploy).
 Browser
   │  HTTPS
   ▼
-mytour-frontend  (Docker / nginx, port 80)
+mytour-frontend  (Docker / nginx, PORT injected by Render)
   │  /api/* → proxy_pass BACKEND_URL
   ▼
 mytour-backend   (Docker / ASP.NET Core, port 8080)
