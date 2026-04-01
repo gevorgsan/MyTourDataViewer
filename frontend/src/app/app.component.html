@@ -1,4 +1,0 @@
-<app-navbar *ngIf="auth.isAuthenticated()"></app-navbar>
-<main class="main-content" [class.main-content--guest]="!auth.isAuthenticated()">
-  <router-outlet></router-outlet>
-</main>

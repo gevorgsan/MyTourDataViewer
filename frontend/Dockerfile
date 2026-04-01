@@ -4,12 +4,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-RUN npm run build -- --configuration production
+RUN npm run build
 
 # Serve stage
 FROM nginx:alpine
-# Angular 19's application builder outputs browser files into dist/frontend/browser/
-COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
+# React/Vite builds to dist/
+COPY --from=build /app/dist /usr/share/nginx/html
 # Store the config as a template; BACKEND_URL is substituted at container start.
 COPY nginx.conf /etc/nginx/nginx.conf.template
 EXPOSE 80
