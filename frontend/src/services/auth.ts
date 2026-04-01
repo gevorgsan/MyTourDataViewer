@@ -1,4 +1,4 @@
-import { API_BASE, ApiError } from './api';
+import { API_BASE, ApiError, fetchWithRetry } from './api';
 import type { LoginRequest, LoginResponse, User } from '../types/models';
 
 const TOKEN_KEY = 'token';
@@ -51,7 +51,7 @@ export function isAdmin(): boolean {
 
 /** Authenticate and store the JWT token. Throws ApiError on failure. */
 export async function login(request: LoginRequest): Promise<LoginResponse> {
-  const res = await fetch(`${API_BASE}/auth/login`, {
+  const res = await fetchWithRetry(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
@@ -78,7 +78,7 @@ export async function login(request: LoginRequest): Promise<LoginResponse> {
 /** Return current user profile. */
 export async function me(): Promise<User> {
   const token = getToken();
-  const res = await fetch(`${API_BASE}/auth/me`, {
+  const res = await fetchWithRetry(`${API_BASE}/auth/me`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!res.ok) {
