@@ -10,9 +10,11 @@ RUN npm run build
 FROM nginx:stable-alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/default.conf.template
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 EXPOSE 8080
 # BACKEND_HOST must be the bare backend hostname (e.g. mytour-backend.onrender.com).
 # On Render this is injected directly via fromService property: host.
 # For other platforms, BACKEND_URL (full URL, e.g. https://foo.example.com) can be
 # provided instead; the bare hostname is then extracted automatically.
-CMD ["/bin/sh", "-c", "BACKEND_HOST=\"${BACKEND_HOST:-$(printf '%s' \"${BACKEND_URL}\" | sed -E -e 's|^https?://||' -e 's|/.*||')}\" && [ -n \"$BACKEND_HOST\" ] || { echo 'ERROR: BACKEND_HOST (or BACKEND_URL) must be set'; exit 1; } && DNS_RESOLVER=$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf) && export DNS_RESOLVER=\"${DNS_RESOLVER:-8.8.8.8}\" && envsubst '$BACKEND_HOST $DNS_RESOLVER' < /etc/nginx/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+CMD ["/docker-entrypoint.sh"]
