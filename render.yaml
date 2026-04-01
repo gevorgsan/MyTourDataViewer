@@ -6,6 +6,7 @@
 #
 # ─── Cost summary (as of 2025) ────────────────────────────────────────────────
 #  Free plan web services : sleep after 15 min of inactivity (30–60 s cold start)
+#  Free plan static sites : always-on, no sleep, no Docker needed
 #  Free plan PostgreSQL   : deleted after 90 days → upgrade to Basic ($7/mo)
 #  Starter web services   : $7/mo each — always-on, no sleep
 # ──────────────────────────────────────────────────────────────────────────────
@@ -47,28 +48,34 @@ services:
       - key: Jwt__Audience
         value: MyTourDataViewerClients
 
-      # Allow requests from the frontend service.
+      # Allow requests from the frontend static site.
       # property: host returns a bare hostname (e.g. mytour-frontend.onrender.com);
       # Program.cs prepends https:// when no scheme is present.
       - key: CORS_ORIGINS
         fromService:
-          type: web
+          type: static
           name: mytour-frontend
           property: host
 
-  # ── Frontend (React + Vite + nginx) ─────────────────────────────────────────
-  - type: web
+  # ── Frontend (React + Vite — Render Static Site) ─────────────────────────────
+  # No Docker or Nginx required: Render builds the Vite app and serves the dist/
+  # folder directly.  The rewrite rule below enables SPA client-side routing.
+  - type: static
     name: mytour-frontend
     region: oregon
-    plan: free
-    runtime: docker
-    dockerfilePath: frontend/Dockerfile
-    dockerContext: frontend
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      # Redirect all paths to index.html so React Router handles client-side routes.
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
-      # nginx proxies /api/ calls to this URL at container startup (via envsubst).
+      # Backend origin injected at build time so Vite embeds it in the JS bundle.
       # property: host returns a bare hostname (e.g. mytour-backend.onrender.com);
-      # the Dockerfile CMD prepends https:// when no scheme is present.
-      - key: BACKEND_URL
+      # api.ts prepends https:// and appends /api when no scheme is present.
+      - key: VITE_API_BASE_URL
         fromService:
           type: web
           name: mytour-backend
