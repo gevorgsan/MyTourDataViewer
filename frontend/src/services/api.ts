@@ -28,6 +28,31 @@ export class ApiError extends Error {
   }
 }
 
+// ── Retry logic for Render free-tier cold starts ────────────────────────────
+// Render's free-tier services sleep after 15 minutes of inactivity.  When the
+// first request arrives, Render's load balancer may immediately return 502/503
+// before the backend has finished waking up.  We retry these gateway errors with
+// exponential back-off so the user doesn't have to manually refresh.
+const RETRYABLE_STATUSES = new Set([502, 503, 504]);
+const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 2_000; // wait between retries: 2 s, 4 s, 8 s
+
+export async function fetchWithRetry(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+  retries = MAX_RETRIES,
+): Promise<Response> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const res = await fetch(input, init);
+    if (!RETRYABLE_STATUSES.has(res.status) || attempt === retries) {
+      return res;
+    }
+    await new Promise((resolve) => setTimeout(resolve, BASE_DELAY_MS * 2 ** attempt));
+  }
+  // Unreachable – the loop always returns – but satisfies the type checker.
+  throw new Error('fetchWithRetry: unexpected loop exit');
+}
+
 async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
   const token = getStoredToken();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -35,7 +60,7 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(url, {
+  const res = await fetchWithRetry(url, {
     method,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
