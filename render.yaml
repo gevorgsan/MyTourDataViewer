@@ -56,7 +56,7 @@ services:
           name: mytour-frontend
           property: host
 
-  # ── Frontend (Angular 19 + nginx) ────────────────────────────────────────────
+  # ── Frontend (React + Vite + nginx) ─────────────────────────────────────────
   - type: web
     name: mytour-frontend
     region: oregon
