@@ -10,7 +10,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - ASPNETCORE_URLS=http://+:5000
+      - PORT=5000
       - DbProvider=sqlite          # change to "postgres" to use PostgreSQL
       - Jwt__Key=CHANGE_ME_IN_PRODUCTION_32_CHARS_MIN
       - Jwt__Issuer=MyTourDataViewer

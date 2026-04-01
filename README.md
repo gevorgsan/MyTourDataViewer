@@ -298,14 +298,13 @@ Render handles HTTPS termination automatically. There are two ways to deploy:
 | **Runtime** | Docker |
 | **Dockerfile path** | `backend/MyTourDataViewer.Api/Dockerfile` |
 | **Docker context** | `backend/MyTourDataViewer.Api` |
-| **Port** | `5000` |
-| **Health check path** | `/swagger` |
+| **Port** | `8080` |
+| **Health check path** | `/health` |
 
 3. Add environment variables:
 
 | Variable | Value |
 |---|---|
-| `ASPNETCORE_URLS` | `http://+:5000` |
 | `DbProvider` | `postgres` |
 | `ConnectionStrings__Postgres` | Paste the **Internal Database URL** from step 1 |
 | `Jwt__Key` | Generate with `openssl rand -base64 32` — **keep secret** |
@@ -358,7 +357,7 @@ Browser
 mytour-frontend  (Docker / nginx, port 80)
   │  /api/* → proxy_pass BACKEND_URL
   ▼
-mytour-backend   (Docker / ASP.NET Core, port 5000)
+mytour-backend   (Docker / ASP.NET Core, port 8080)
   │  EF Core / Npgsql
   ▼
 mytour-db        (Render managed PostgreSQL)
