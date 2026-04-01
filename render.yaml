@@ -48,13 +48,13 @@ services:
         value: MyTourDataViewerClients
 
       # Allow requests from the frontend service.
-      # property: url returns the full https:// URL (e.g. https://mytour-frontend.onrender.com)
-      # so no scheme-prepend logic in the backend is needed.
+      # property: host returns a bare hostname (e.g. mytour-frontend.onrender.com);
+      # Program.cs prepends https:// when no scheme is present.
       - key: CORS_ORIGINS
         fromService:
           type: web
           name: mytour-frontend
-          property: url
+          property: host
 
   # ── Frontend (Angular 19 + nginx) ────────────────────────────────────────────
   - type: web
@@ -66,10 +66,10 @@ services:
     dockerContext: frontend
     envVars:
       # nginx proxies /api/ calls to this URL at container startup (via envsubst).
-      # property: url returns the full https:// URL (e.g. https://mytour-backend.onrender.com)
-      # so no scheme-prepend logic in the Dockerfile CMD is needed.
+      # property: host returns a bare hostname (e.g. mytour-backend.onrender.com);
+      # the Dockerfile CMD prepends https:// when no scheme is present.
       - key: BACKEND_URL
         fromService:
           type: web
           name: mytour-backend
-          property: url
+          property: host
