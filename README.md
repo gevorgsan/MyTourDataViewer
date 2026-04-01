@@ -100,6 +100,141 @@ docker-compose up --build
 
 Set `DbProvider=postgres` in `docker-compose.yml` or in `appsettings.json` to use PostgreSQL instead of SQLite.
 
+## Deploy on Fly.io
+
+Fly.io handles HTTPS termination automatically. Backend and frontend are deployed as separate Fly apps.
+
+### Architecture
+
+```
+Browser
+  │  HTTPS (Fly.io edge TLS)
+  ▼
+mytour-frontend  (Docker / nginx, Fly.io app)
+  │  /api/* → proxy_pass BACKEND_URL
+  ▼
+mytour-backend   (Docker / ASP.NET Core, Fly.io app)
+  │  EF Core / Npgsql
+  ▼
+mytour-db        (Fly Postgres)
+```
+
+### Prerequisites
+
+- [flyctl](https://fly.io/docs/getting-started/installing-flyctl/) installed and authenticated (`fly auth login`)
+- This repository pushed to GitHub (optional, can also deploy from local)
+
+---
+
+### 1 — Create and attach a Fly Postgres database
+
+```bash
+# Create a Fly Postgres cluster (free allowance available)
+fly postgres create --name mytour-db --region iad
+```
+
+### 2 — Deploy the backend
+
+```bash
+cd backend/MyTourDataViewer.Api
+
+# Create the Fly app (first time only)
+fly apps create mytour-backend
+
+# Set secrets (never committed to source control)
+fly secrets set Jwt__Key="$(openssl rand -base64 32)"
+fly secrets set CORS_ORIGINS="https://mytour-frontend.fly.dev"
+
+# Attach Fly Postgres – sets ConnectionStrings__Postgres automatically
+fly postgres attach mytour-db --app mytour-backend --variable-name ConnectionStrings__Postgres
+
+# Build and deploy
+fly deploy
+```
+
+> `DbProvider=postgres`, `Jwt__Issuer`, and `Jwt__Audience` are already set in `fly.toml`.  
+> The `/health` endpoint is used for Fly.io health checks; the app returns 503 while EF Core migrations run.
+
+### 3 — Deploy the frontend
+
+```bash
+cd frontend
+
+# Create the Fly app (first time only)
+fly apps create mytour-frontend
+
+# Update BACKEND_URL in fly.toml if your backend app name differs from "mytour-backend"
+# Then deploy:
+fly deploy
+```
+
+> `BACKEND_URL` in `frontend/fly.toml` points to `https://mytour-backend.fly.dev` by default.  
+> nginx proxies all `/api/` requests to this URL at container startup.
+
+### 4 — Wire CORS (first deploy only)
+
+Once the frontend app is live, add its URL to the backend's `CORS_ORIGINS` secret:
+
+```bash
+fly secrets set CORS_ORIGINS="https://mytour-frontend.fly.dev" --app mytour-backend
+```
+
+If you use a custom app name, replace `mytour-frontend` with your actual app name.
+
+---
+
+### Required environment variables
+
+#### Backend secrets (set via `fly secrets set`)
+
+| Variable | Description |
+|---|---|
+| `Jwt__Key` | JWT signing key — at least 32 random characters. Generate with `openssl rand -base64 32` |
+| `ConnectionStrings__Postgres` | PostgreSQL connection string (set automatically by `fly postgres attach`) |
+| `CORS_ORIGINS` | Comma-separated list of allowed origins, e.g. `https://mytour-frontend.fly.dev` |
+
+#### Backend env vars (already in `fly.toml`)
+
+| Variable | Value |
+|---|---|
+| `PORT` | `8080` |
+| `DbProvider` | `postgres` |
+| `Jwt__Issuer` | `MyTourDataViewer` |
+| `Jwt__Audience` | `MyTourDataViewerClients` |
+
+#### Frontend env vars (already in `fly.toml`)
+
+| Variable | Description |
+|---|---|
+| `PORT` | `8080` — nginx listen port inside the container |
+| `BACKEND_URL` | Full `https://` URL of the backend Fly app |
+
+---
+
+### How HTTPS works on Fly.io
+
+Fly.io's edge automatically issues TLS certificates for every `*.fly.dev` app and for custom domains.  
+No TLS configuration is needed in the Dockerfiles, nginx, or the ASP.NET Core app.  
+`force_https = true` in `fly.toml` ensures HTTP requests are redirected to HTTPS at the edge.
+
+### How backend/frontend communicate
+
+The frontend nginx container starts with `BACKEND_URL=https://mytour-backend.fly.dev`.  
+All browser requests to `/api/*` are proxied by nginx to the backend over HTTPS.  
+The backend verifies the JWT and processes the request. No direct browser-to-backend calls are made.
+
+### Scaling and cost notes
+
+| Resource | Fly.io free allowance |
+|---|---|
+| Machines | 3 shared-cpu-1x 256 MB machines |
+| Postgres | Not included in free tier — ~$3/mo for the smallest cluster |
+| Auto-stop | Enabled by default; machines wake on first request (~1–3 s) |
+
+To disable auto-stop (always-on): set `min_machines_running = 1` in `fly.toml` and redeploy.
+
+---
+
 ## Deploy on Render
 
 Render handles HTTPS termination automatically. There are two ways to deploy:
