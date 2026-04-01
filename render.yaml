@@ -48,34 +48,29 @@ services:
       - key: Jwt__Audience
         value: MyTourDataViewerClients
 
-      # Allow requests from the frontend static site.
+      # Allow requests from the frontend web service.
       # property: host returns a bare hostname (e.g. mytour-frontend.onrender.com);
       # Program.cs prepends https:// when no scheme is present.
       - key: CORS_ORIGINS
         fromService:
-          type: static
+          type: web
           name: mytour-frontend
           property: host
 
-  # ── Frontend (React + Vite — Render Static Site) ─────────────────────────────
-  # No Docker or Nginx required: Render builds the Vite app and serves the dist/
-  # folder directly.  The rewrite rule below enables SPA client-side routing.
-  - type: static
+  # ── Frontend (React + Vite + nginx — Render Docker Web Service) ──────────────
+  # nginx proxies /api to the backend, so the React app uses relative /api paths
+  # with no CORS issues and no need to embed the backend URL at build time.
+  - type: web
     name: mytour-frontend
     region: oregon
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
-    routes:
-      # Redirect all paths to index.html so React Router handles client-side routes.
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    plan: free          # change to "starter" ($7/mo) to eliminate cold-start delays
+    runtime: docker
+    dockerfilePath: frontend/Dockerfile
+    dockerContext: frontend
     envVars:
-      # Backend origin injected at build time so Vite embeds it in the JS bundle.
       # property: host returns a bare hostname (e.g. mytour-backend.onrender.com);
-      # api.ts prepends https:// and appends /api when no scheme is present.
-      - key: VITE_API_BASE_URL
+      # nginx.conf uses it directly in the upstream proxy_pass directive.
+      - key: BACKEND_HOST
         fromService:
           type: web
           name: mytour-backend
