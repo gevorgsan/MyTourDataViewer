@@ -1,4 +1,16 @@
-const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api';
+// VITE_API_BASE_URL is the backend origin (e.g. https://mytour-backend.onrender.com).
+// Render's fromService host property returns a bare hostname; we prepend https:// when
+// no scheme is present, then append /api.  Falls back to /api for the Vite dev-server
+// proxy (see vite.config.ts) when the variable is not set.
+function resolveApiBase(): string {
+  const raw = import.meta.env.VITE_API_BASE_URL as string | undefined;
+  if (!raw) return '/api';
+  const withScheme =
+    raw.startsWith('http://') || raw.startsWith('https://') ? raw : `https://${raw}`;
+  return `${withScheme.replace(/\/$/, '')}/api`;
+}
+
+const API_BASE = resolveApiBase();
 
 /** Retrieve the stored JWT token from localStorage. */
 function getStoredToken(): string | null {

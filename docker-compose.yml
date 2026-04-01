@@ -24,20 +24,6 @@ services:
       - db
     restart: unless-stopped
 
-  # ── Frontend ─────────────────────────────────────────────────────────────────
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: mytour-frontend
-    ports:
-      - "4200:80"
-    environment:
-      - BACKEND_URL=http://backend:5000
-    depends_on:
-      - backend
-    restart: unless-stopped
-
   # ── PostgreSQL (optional, used when DbProvider=postgres) ─────────────────────
   db:
     image: postgres:16-alpine
