@@ -34,8 +34,8 @@ export class ApiError extends Error {
 // before the backend has finished waking up.  We retry these gateway errors with
 // exponential back-off so the user doesn't have to manually refresh.
 const RETRYABLE_STATUSES = new Set([502, 503, 504]);
-const MAX_RETRIES = 3;
-const BASE_DELAY_MS = 2_000; // wait between retries: 2 s, 4 s, 8 s
+const MAX_RETRIES = 5;
+const BASE_DELAY_MS = 2_000; // wait between retries: 2 s, 4 s, 8 s, 16 s, 32 s
 
 export async function fetchWithRetry(
   input: RequestInfo | URL,
@@ -43,13 +43,19 @@ export async function fetchWithRetry(
   retries = MAX_RETRIES,
 ): Promise<Response> {
   for (let attempt = 0; attempt <= retries; attempt++) {
-    const res = await fetch(input, init);
-    if (!RETRYABLE_STATUSES.has(res.status) || attempt === retries) {
-      return res;
+    try {
+      const res = await fetch(input, init);
+      if (!RETRYABLE_STATUSES.has(res.status) || attempt === retries) {
+        return res;
+      }
+    } catch (err: unknown) {
+      // Network errors (TypeError from fetch) are retryable – they may occur
+      // while the backend is still waking up and not yet accepting connections.
+      if (attempt === retries) throw err;
     }
     await new Promise((resolve) => setTimeout(resolve, BASE_DELAY_MS * 2 ** attempt));
   }
-  // Unreachable – the loop always returns – but satisfies the type checker.
+  // Unreachable – the loop always returns or throws – but satisfies the type checker.
   throw new Error('fetchWithRetry: unexpected loop exit');
 }
 
