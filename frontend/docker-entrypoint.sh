@@ -15,17 +15,10 @@ fi
 # Render injects PORT (default 10000); fall back to 8080 for local Docker.
 PORT="${PORT:-8080}"
 
-# ── Resolve DNS server for nginx runtime resolution ─────────────────────────
-# nginx needs an explicit resolver directive when proxy_pass uses a variable.
-# Extract the first nameserver from the system resolver config; fall back to
-# Google Public DNS (safe here because BACKEND_HOST is a public hostname).
-DNS_RESOLVER=$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf)
-DNS_RESOLVER="${DNS_RESOLVER:-8.8.8.8}"
-
-export BACKEND_HOST DNS_RESOLVER PORT
+export BACKEND_HOST PORT
 
 # ── Generate nginx config and start ─────────────────────────────────────────
-envsubst '$BACKEND_HOST $DNS_RESOLVER $PORT' \
+envsubst '$BACKEND_HOST $PORT' \
   < /etc/nginx/default.conf.template \
   > /etc/nginx/conf.d/default.conf
 
