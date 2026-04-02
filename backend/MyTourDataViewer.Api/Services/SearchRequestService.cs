@@ -43,7 +43,7 @@ public class SearchRequestService : ISearchRequestService
         }
 
         var settings = authResult.Settings!;
-        var searchRequestUrl = ResolveSearchRequestUrl(settings);
+        var searchRequestUrl = DefaultSearchRequestUrl;//ResolveSearchRequestUrl(settings);
 
         using var client = _httpClientFactory.CreateClient();
         client.Timeout = settings.TimeoutSeconds > 0
